@@ -89,6 +89,19 @@ func (p *platform) draw(imd *imdraw.IMDraw) {
 	imd.Rectangle(0)
 }
 
+type laser struct {
+	rect pixel.Rect
+	color color.Color
+}
+
+func (l *laser) draw(imd *imdraw.IMDraw) {
+	imd.Color = l.color
+	imd.EndShape = imdraw.RoundEndShape
+
+	imd.Push(pixel.V(l.rect.Min.X, l.rect.Min.Y), pixel.V(l.rect.Max.X, l.rect.Max.Y))
+	imd.Line(1)
+}
+
 type gopherPhys struct {
 	gravity   float64
 	runSpeed  float64
@@ -142,6 +155,28 @@ func (gp *gopherPhys) update(dt float64, ctrl pixel.Vec, platforms []platform) {
 	if gp.ground && ctrl.Y > 0 {
 		gp.vel.Y = gp.jumpSpeed
 	}*/
+}
+
+type fire struct {
+	speed float64
+	origin pixel.Vec
+	vector pixel.Vec
+
+	newLaser *laser
+}
+
+func (f *fire) now(speed float64, origin pixel.Vec, vector pixel.Vec) {
+	f.newLaser = &laser{
+		color: randomNiceColor(),
+		// Minus half window size
+		rect: pixel.R(origin.X-512, origin.Y-384, vector.X-512, vector.Y-384),
+	}
+}
+
+func (f *fire) draw(imd *imdraw.IMDraw) {
+	if f.newLaser != nil {
+		f.newLaser.draw(imd)
+	}
 }
 
 type animState int
@@ -318,7 +353,7 @@ func run() {
 	for i := range lights {
 		lights[i] = colorlight{
 			color:  pixel.RGB(float64(255)/float64(255), 0, float64(250)/float64(255)),
-			point:  pixel.Vec{X: win.Bounds().Min.X, Y: win.Bounds().Min.Y},
+			point:  pixel.Vec{X: win.Bounds().Center().X, Y: win.Bounds().Center().Y},
 			angle:  math.Pi / 4,
 			radius: 400,
 			dust:   0.3,
@@ -339,6 +374,8 @@ func run() {
 		jumpSpeed: 192,
 		rect:      pixel.R(-6, -7, 6, 7),
 	}
+
+	fire := &fire{}
 
 	anim := &gopherAnim{
 		sheet: sheet,
@@ -402,6 +439,10 @@ func run() {
 			phys.vel = pixel.ZV
 		}
 
+		if win.JustPressed(pixelgl.MouseButtonLeft) {
+			fire.now(128, win.Bounds().Center().Add(phys.rect.Center()), win.MousePosition())
+		}
+
 		// control the gopher with keys
 		ctrl := pixel.ZV
 		if win.Pressed(pixelgl.KeyA) {
@@ -426,8 +467,6 @@ func run() {
 		canvas.Clear(colornames.Black)
 		imd.Clear()
 
-		panda.Draw(win, pixel.IM.Moved(win.Bounds().Center()))
-
 		// accumulate all the lights
 		for i := range lights {
 			oneLight.Clear(pixel.Alpha(0))
@@ -435,6 +474,9 @@ func run() {
 			oneLight.Draw(allLight, pixel.IM.Moved(allLight.Bounds().Center()))
 		}
 
+		panda.Draw(win, pixel.IM.Moved(win.Bounds().Min))
+
+		fire.draw(imd)
 		for _, p := range platforms {
 			p.draw(imd)
 		}
