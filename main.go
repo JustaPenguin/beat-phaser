@@ -92,6 +92,8 @@ func (p *platform) draw(imd *imdraw.IMDraw) {
 type laser struct {
 	rect pixel.Rect
 	color color.Color
+
+	thickness float64
 }
 
 func (l *laser) draw(imd *imdraw.IMDraw) {
@@ -99,7 +101,11 @@ func (l *laser) draw(imd *imdraw.IMDraw) {
 	imd.EndShape = imdraw.RoundEndShape
 
 	imd.Push(pixel.V(l.rect.Min.X, l.rect.Min.Y), pixel.V(l.rect.Max.X, l.rect.Max.Y))
-	imd.Line(1)
+	imd.Line(l.thickness)
+
+	if l.thickness > 0 {
+		l.thickness = l.thickness - 0.02
+	}
 }
 
 type gopherPhys struct {
@@ -170,6 +176,7 @@ func (f *fire) now(speed float64, origin pixel.Vec, vector pixel.Vec) {
 		color: randomNiceColor(),
 		// Minus half window size
 		rect: pixel.R(origin.X-512, origin.Y-384, vector.X-512, vector.Y-384),
+		thickness: 2,
 	}
 }
 
@@ -266,6 +273,36 @@ func (ga *gopherAnim) draw(t pixel.Target, phys *gopherPhys) {
 	)
 }
 
+type hat struct {
+	pos pixel.Vec
+	counter float64
+	color, altColor   pixel.RGBA
+}
+
+func (h *hat) update(dt float64, target pixel.Vec) {
+	h.pos.X = target.X
+	h.pos.Y = target.Y
+	h.pos.Y += 6
+}
+
+func (h *hat) draw(imd *imdraw.IMDraw) {
+	imd.Color = h.color
+
+	imd.Push(pixel.V(h.pos.X, h.pos.Y))
+	imd.Push(pixel.V(h.pos.X-5, h.pos.Y+0))
+	imd.Push(pixel.V(h.pos.X-5, h.pos.Y+1))
+	imd.Push(pixel.V(h.pos.X-2.5, h.pos.Y+1))
+
+	imd.Color = h.altColor
+
+	imd.Push(pixel.V(h.pos.X-2.5, h.pos.Y+5))
+	imd.Push(pixel.V(h.pos.X+2.5, h.pos.Y+5))
+	imd.Push(pixel.V(h.pos.X+2.5, h.pos.Y+1))
+	imd.Push(pixel.V(h.pos.X+5, h.pos.Y+1))
+	imd.Push(pixel.V(h.pos.X+5, h.pos.Y+0))
+	imd.Polygon(0)
+}
+
 type goal struct {
 	pos    pixel.Vec
 	radius float64
@@ -275,7 +312,7 @@ type goal struct {
 	cols    [5]pixel.RGBA
 }
 
-func (g *goal) update(dt float64) {
+func (g *goal) update(dt float64, target pixel.Vec) {
 	g.counter += dt
 	for g.counter > g.step {
 		g.counter -= g.step
@@ -283,6 +320,22 @@ func (g *goal) update(dt float64) {
 			g.cols[i+1] = g.cols[i]
 		}
 		g.cols[0] = randomNiceColor()
+	}
+
+	if g.pos.X < target.X {
+		g.pos.X += 0.08
+	}
+
+	if g.pos.X > target.X {
+		g.pos.X -= 0.08
+	}
+
+	if g.pos.Y < target.Y {
+		g.pos.Y += 0.08
+	}
+
+	if g.pos.Y > target.Y {
+		g.pos.Y -= 0.08
 	}
 }
 
@@ -409,6 +462,8 @@ func run() {
 		step:   1.0 / 7,
 	}
 
+	hat := &hat{color: pixel.RGB(float64(255)/float64(255), 0, float64(250)/float64(255)), altColor: pixel.RGB(float64(32)/float64(255), float64(22)/float64(255), float64(249)/float64(156))}
+
 	canvas := pixelgl.NewCanvas(pixel.R(-160/2, -120/2, 160/2, 120/2))
 	oneLight := pixelgl.NewCanvas(win.Bounds())
 	allLight := pixelgl.NewCanvas(win.Bounds())
@@ -460,7 +515,8 @@ func run() {
 
 		// update the physics and animation
 		phys.update(dt, ctrl, platforms)
-		gol.update(dt)
+		gol.update(dt, phys.rect.Center())
+		hat.update(dt, phys.rect.Center())
 		anim.update(dt, phys)
 
 		// draw the scene to the canvas using IMDraw
@@ -482,6 +538,7 @@ func run() {
 		}
 		gol.draw(imd)
 		anim.draw(imd, phys)
+		hat.draw(imd)
 		imd.Draw(canvas)
 
 		// stretch the canvas to the window
