@@ -308,6 +308,35 @@ func (h *hat) draw(imd *imdraw.IMDraw) {
 	imd.Polygon(0)
 }
 
+type rain struct {
+	positions []pixel.Vec
+}
+
+func (r *rain) update(lowerLimit, top float64) {
+	xRange :=  rand.Float64() - 0.5
+
+	for i := range r.positions {
+		r.positions[i].Y -= rand.Float64()
+		r.positions[i].X -= xRange
+
+		if r.positions[i].Y < lowerLimit {
+			r.positions[i].Y = top
+		}
+	}
+}
+
+func (r *rain) draw(imd *imdraw.IMDraw) {
+	imd.Color = color.White
+
+	for _, position := range r.positions {
+		imd.Push(pixel.V(position.X, position.Y))
+		imd.Push(pixel.V(position.X+1, position.Y))
+		imd.Push(pixel.V(position.X+1, position.Y-1))
+		imd.Push(pixel.V(position.X, position.Y-1))
+		imd.Polygon(0)
+	}
+}
+
 type goal struct {
 	pos    pixel.Vec
 	radius float64
@@ -475,6 +504,16 @@ func run() {
 
 	hat := &hat{color: pixel.RGB(float64(255)/float64(255), 0, float64(250)/float64(255)), altColor: pixel.RGB(float64(32)/float64(255), float64(22)/float64(255), float64(249)/float64(156))}
 
+	var rainDrops []pixel.Vec
+
+	for i := 0; i < 1000; i++ {
+		rainDrops = append(rainDrops, pixel.V((rand.Float64() * (win.Bounds().Max.X)) - win.Bounds().Max.X/2, (rand.Float64() * (win.Bounds().Max.Y)) - win.Bounds().Max.Y/2))
+	}
+
+	rain := &rain{
+		positions: rainDrops,
+	}
+
 	canvas := pixelgl.NewCanvas(pixel.R(-160/2, -120/2, 160/2, 120/2))
 	oneLight := pixelgl.NewCanvas(win.Bounds())
 	allLight := pixelgl.NewCanvas(win.Bounds())
@@ -529,6 +568,7 @@ func run() {
 		phys.update(dt, ctrl, platforms)
 		gol.update(dt, phys.rect.Center())
 		hat.update(dt, phys.rect.Center())
+		rain.update(phys.rect.Center().Y - win.Bounds().Max.Y/2, phys.rect.Center().Y + win.Bounds().Max.Y/2)
 		anim.update(dt, phys)
 
 		// draw the scene to the canvas using IMDraw
@@ -551,6 +591,7 @@ func run() {
 		gol.draw(imd)
 		anim.draw(imd, phys)
 		hat.draw(imd)
+		rain.draw(imd)
 		imd.Draw(canvas)
 
 		// stretch the canvas to the window
