@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/csv"
+	"fmt"
 	"github.com/faiface/beep"
 	"github.com/faiface/beep/effects"
 	"github.com/faiface/beep/mp3"
@@ -10,8 +11,10 @@ import (
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/imdraw"
 	"github.com/faiface/pixel/pixelgl"
+	"github.com/faiface/pixel/text"
 	"github.com/pkg/errors"
 	"golang.org/x/image/colornames"
+	"golang.org/x/image/font/basicfont"
 	"image"
 	"image/color"
 	_ "image/png"
@@ -169,9 +172,9 @@ type fire struct {
 	newLaser *laser
 }
 
-func (f *fire) now(speed float64, origin pixel.Vec, vector pixel.Vec) {
+func (f *fire) now(speed float64, origin pixel.Vec, vector pixel.Vec, color color.Color) {
 	f.newLaser = &laser{
-		color: randomNiceColor(),
+		color: color,
 		// Minus half window size
 		rect: pixel.R(origin.X-512, origin.Y-384, vector.X-512, vector.Y-384),
 		thickness: 2,
@@ -331,6 +334,38 @@ func (r *rain) draw(imd *imdraw.IMDraw) {
 	}
 }
 
+type score struct {
+	multiplier int
+	pos pixel.Vec
+
+	text *text.Text
+}
+
+func (s *score) update(multiplier int) {
+	s.multiplier = multiplier
+}
+
+func (s *score) draw() {
+
+	atlas := text.NewAtlas(
+		basicfont.Face7x13,
+		[]rune{'0', '1', '2', '3', '4', '5', '6', '7', '8', 'x'},
+	)
+
+	s.text = text.New(s.pos, atlas)
+
+	// @TODO colours for scores, perhaps a little animated multi tone stuff for big ones
+	switch s.multiplier {
+	case 1:
+		s.text.Color = colornames.Aqua
+	case 2:
+		s.text.Color = colornames.Coral
+
+	}
+
+	fmt.Fprintf(s.text, "%dx", s.multiplier)
+}
+
 type goal struct {
 	pos    pixel.Vec
 	radius float64
@@ -415,6 +450,8 @@ func loadPicture(path string) (pixel.Picture, error) {
 func run() {
 	rand.Seed(time.Now().UnixNano())
 
+	bpm := float64(103)
+
 	sheet, anims, err := loadAnimationSheet("sheet.png", "sheet.csv", 12)
 	if err != nil {
 		panic(err)
@@ -460,6 +497,11 @@ func run() {
 		runSpeed:  64,
 		jumpSpeed: 192,
 		rect:      pixel.R(-6, -7, 6, 7),
+	}
+
+	score := &score{
+		multiplier: 0,
+		pos: pixel.V(0, 0),
 	}
 
 	fire := &fire{}
@@ -517,9 +559,14 @@ func run() {
 
 	camPos := pixel.ZV
 
+	var increment int
+	var multiplier int
+
 	last := time.Now()
+	lastClick := time.Now()
 	for !win.Closed() {
 		dt := time.Since(last).Seconds()
+		timeSinceClick := time.Since(lastClick).Seconds()
 		last = time.Now()
 
 		// lerp the camera position towards the gopher
@@ -539,8 +586,37 @@ func run() {
 		}
 
 		if win.JustPressed(pixelgl.MouseButtonLeft) {
+			lastClick = time.Now()
+
+			if timeSinceClick > 60/bpm + 0.05 || timeSinceClick < 60/bpm - 0.05 {
+				increment --
+
+				if increment <= 0 {
+					multiplier--
+					increment = 8
+				}
+
+				if multiplier < 0 {
+					multiplier = 0
+				}
+
+				fire.now(128, win.Bounds().Center().Add(phys.rect.Center()), win.MousePosition(), color.White)
+			} else {
+				increment++
+
+				if increment >= 8 {
+					multiplier++
+					increment = 0
+				}
+
+				if multiplier > 8 {
+					multiplier = 8
+				}
+
+				fire.now(128, win.Bounds().Center().Add(phys.rect.Center()), win.MousePosition(), randomNiceColor())
+			}
+
 			go pringlePhaser.play()
-			fire.now(128, win.Bounds().Center().Add(phys.rect.Center()), win.MousePosition())
 		}
 
 		// control the gopher with keys
@@ -560,6 +636,7 @@ func run() {
 
 		// update the physics and animation
 		phys.update(dt, ctrl, platforms)
+		score.update(multiplier)
 		gol.update(dt, phys.rect.Center())
 		hat.update(dt, phys.rect.Center())
 		rain.update(phys.rect.Center().Y - win.Bounds().Max.Y/2, phys.rect.Center().Y + win.Bounds().Max.Y/2)
@@ -583,6 +660,7 @@ func run() {
 			p.draw(imd)
 		}
 		gol.draw(imd)
+		score.draw()
 		anim.draw(imd, phys)
 		hat.draw(imd)
 		rain.draw(imd)
@@ -597,6 +675,7 @@ func run() {
 			),
 		).Moved(win.Bounds().Center()))
 		canvas.Draw(win, pixel.IM.Moved(canvas.Bounds().Center()))
+		score.text.Draw(win, pixel.IM.Moved(canvas.Bounds().Min))
 
 		win.Update()
 	}
