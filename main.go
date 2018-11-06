@@ -146,8 +146,7 @@ func (gp *gopherPhys) update(dt float64, ctrl pixel.Vec, platforms []platform) {
 	// apply gravity and velocity
 	gp.rect = gp.rect.Moved(gp.vel.Scaled(dt))
 
-	// @TODO collisions with stuff looks like this
-	/*gp.ground = false
+	// @TODO collisions with stuff looks like this, turn platforms into walls
 	if gp.vel.Y <= 0 {
 		for _, p := range platforms {
 			if gp.rect.Max.X <= p.rect.Min.X || gp.rect.Min.X >= p.rect.Max.X {
@@ -158,14 +157,8 @@ func (gp *gopherPhys) update(dt float64, ctrl pixel.Vec, platforms []platform) {
 			}
 			gp.vel.Y = 0
 			gp.rect = gp.rect.Moved(pixel.V(0, p.rect.Max.Y-gp.rect.Min.Y))
-			gp.ground = true
 		}
 	}
-
-	// jump if on the ground and the player wants to jump
-	if gp.ground && ctrl.Y > 0 {
-		gp.vel.Y = gp.jumpSpeed
-	}*/
 }
 
 type fire struct {
@@ -284,6 +277,7 @@ type hat struct {
 	color, altColor   pixel.RGBA
 }
 
+// @TODO hat should move up and down with animation
 func (h *hat) update(dt float64, target pixel.Vec) {
 	h.pos.X = target.X
 	h.pos.Y = target.Y
