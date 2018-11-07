@@ -600,7 +600,7 @@ func run() {
 					multiplier = 0
 				}
 
-				fire.now(128, win.Bounds().Center().Add(phys.rect.Center()), win.MousePosition(), color.White)
+				fire.now(128, win.Bounds().Center().Add(phys.rect.Center()), win.MousePosition().Add(camPos), color.White)
 			} else {
 				increment++
 
@@ -613,7 +613,7 @@ func run() {
 					multiplier = 8
 				}
 
-				fire.now(128, win.Bounds().Center().Add(phys.rect.Center()), win.MousePosition(), randomNiceColor())
+				fire.now(128, win.Bounds().Center().Add(phys.rect.Center()), win.MousePosition().Add(camPos), randomNiceColor())
 			}
 
 			go pringlePhaser.play()
@@ -719,6 +719,7 @@ func (s *soundEffect) play() {
 		Streamer: s.decoded,
 		Base: 2,
 		Volume: -3,
+		Silent: true,
 	}
 
 	speaker.Play(beep.Seq(&effectVolume, beep.Callback(func() {
@@ -743,7 +744,14 @@ func loadAudio() {
 
 	playing := make(chan struct{})
 
-	speaker.Play(beep.Seq(s1, beep.Callback(func() {
+	songVolume := effects.Volume{
+		Streamer: s1,
+		Base: 2,
+		Volume: -3,
+		Silent: true,
+	}
+
+	speaker.Play(beep.Seq(&songVolume, beep.Callback(func() {
 		println("close")
 		close(playing)
 	})))
