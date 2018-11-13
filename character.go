@@ -134,6 +134,14 @@ func (h *hat) draw(t pixel.Target) {
 	imd.Draw(t)
 }
 
+type gopherAnimationState int
+
+const (
+	idle gopherAnimationState = iota
+	running
+	jumping
+)
+
 type body struct {
 	// phys
 	gravity   float64
@@ -149,7 +157,7 @@ type body struct {
 	sheet   pixel.Picture
 	anims   map[string][]pixel.Rect
 	rate    float64
-	state   animState
+	state   gopherAnimationState
 	counter float64
 	dir     float64
 	frame   pixel.Rect
@@ -160,7 +168,7 @@ func (gp *body) init() {
 	if gp.sheet == nil || gp.anims == nil {
 		var err error
 
-		gp.sheet, gp.anims, err = loadAnimationSheet("sheet.png", "sheet.csv", 12)
+		gp.sheet, gp.anims, err = loadAnimationSheet("gopher", 12)
 
 		if err != nil {
 			panic(err)
@@ -223,7 +231,7 @@ func (gp *body) update(dt float64) {
 	gp.counter += dt
 
 	// determine the new animation state
-	var newState animState
+	var newState gopherAnimationState
 	switch {
 	case !gp.ground:
 		newState = jumping

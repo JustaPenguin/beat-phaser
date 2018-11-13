@@ -36,5 +36,4 @@ func (cl *colorlight) apply(dst pixel.ComposeTarget, center pixel.Vec) {
 	dst.SetColorMask(pixel.Alpha(1))
 	dst.SetComposeMethod(pixel.ComposePlus)
 	cl.imd.Draw(dst)
-
 }

@@ -1,28 +1,28 @@
 package main
 
 import (
-	"github.com/faiface/pixel"
-	"github.com/faiface/pixel/imdraw"
 	"image/color"
 	"math/rand"
-)
 
-type idk interface {
-	init()
-	update(dt float64)
-	draw(imd *imdraw.IMDraw)
-}
+	"github.com/faiface/pixel"
+	"github.com/faiface/pixel/imdraw"
+)
 
 type world struct {
 	character *character
 
 	platforms []platform
 	rain      *rain
+
+	weather   *imdraw.IMDraw
+	mainScene *imdraw.IMDraw
 }
 
 func (w *world) init() {
 	w.character = &character{}
 	w.character.init()
+	w.mainScene = imdraw.New(nil)
+	w.weather = imdraw.New(nil)
 
 	w.platforms = []platform{
 		{rect: pixel.R(-50, -34, 50, -32)},
@@ -59,12 +59,18 @@ func (w *world) update(dt float64) {
 }
 
 func (w *world) draw(t pixel.Target) {
+	w.mainScene.Clear()
+	w.weather.Clear()
+
 	w.character.draw(t)
-	w.rain.draw(t)
+	w.rain.draw(w.weather)
 
 	for _, p := range w.platforms {
-		p.draw(t)
+		p.draw(w.mainScene)
 	}
+
+	w.weather.Draw(t)
+	w.mainScene.Draw(t)
 }
 
 type rain struct {
@@ -84,9 +90,7 @@ func (r *rain) update(lowerLimit, top float64) {
 	}
 }
 
-func (r *rain) draw(t pixel.Target) {
-	imd := imdraw.New(nil)
-
+func (r *rain) draw(imd *imdraw.IMDraw) {
 	imd.Color = color.White
 
 	for _, position := range r.positions {
@@ -96,8 +100,6 @@ func (r *rain) draw(t pixel.Target) {
 		imd.Push(pixel.V(position.X, position.Y-1))
 		imd.Polygon(0)
 	}
-
-	imd.Draw(t)
 }
 
 type platform struct {
@@ -105,12 +107,8 @@ type platform struct {
 	color color.Color
 }
 
-func (p *platform) draw(t pixel.Target) {
-	imd := imdraw.New(nil)
-
+func (p *platform) draw(imd *imdraw.IMDraw) {
 	imd.Color = p.color
 	imd.Push(p.rect.Min, p.rect.Max)
 	imd.Rectangle(0)
-
-	imd.Draw(t)
 }

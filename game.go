@@ -2,13 +2,15 @@ package main
 
 import (
 	"fmt"
-	"golang.org/x/image/colornames"
 	"math"
 	"math/rand"
 	"time"
 
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/pixelgl"
+	"github.com/faiface/pixel/text"
+	"golang.org/x/image/colornames"
+	"golang.org/x/image/font/basicfont"
 )
 
 func init() {
@@ -58,8 +60,24 @@ func (g *game) update(dt float64) {
 	g.world.update(dt)
 }
 
-func (g *game) draw() {
+func (g *game) draw(canvas *pixelgl.Canvas) {
+	// clear the canvas to black
+	canvas.Clear(colornames.Black)
 
+	// draw to imd
+	g.world.draw(canvas)
+	g.score.draw()
+
+	win.Clear(colornames.White)
+	win.SetMatrix(pixel.IM.Scaled(pixel.ZV,
+		math.Min(
+			win.Bounds().W()/canvas.Bounds().W(),
+			win.Bounds().H()/canvas.Bounds().H(),
+		),
+	).Moved(win.Bounds().Center()))
+	canvas.Draw(win, pixel.IM.Moved(canvas.Bounds().Center()))
+
+	g.score.text.Draw(win, pixel.IM.Moved(canvas.Bounds().Min))
 }
 
 func (g *game) run() {
@@ -90,24 +108,7 @@ func (g *game) run() {
 		}
 
 		g.update(dt)
-
-		// clear the canvas to black
-		canvas.Clear(colornames.Black)
-
-		// draw to imd
-		g.world.draw(canvas)
-		g.score.draw()
-
-		win.Clear(colornames.White)
-		win.SetMatrix(pixel.IM.Scaled(pixel.ZV,
-			math.Min(
-				win.Bounds().W()/canvas.Bounds().W(),
-				win.Bounds().H()/canvas.Bounds().H(),
-			),
-		).Moved(win.Bounds().Center()))
-		canvas.Draw(win, pixel.IM.Moved(canvas.Bounds().Center()))
-
-		g.score.text.Draw(win, pixel.IM.Moved(canvas.Bounds().Min))
+		g.draw(canvas)
 
 		win.Update()
 
@@ -119,4 +120,35 @@ func (g *game) run() {
 		default:
 		}
 	}
+}
+
+type score struct {
+	multiplier int
+	pos        pixel.Vec
+
+	text *text.Text
+}
+
+func (s *score) update(multiplier int) {
+	s.multiplier = multiplier
+}
+
+func (s *score) draw() {
+	atlas := text.NewAtlas(
+		basicfont.Face7x13,
+		[]rune{'0', '1', '2', '3', '4', '5', '6', '7', '8', 'x'},
+	)
+
+	s.text = text.New(s.pos, atlas)
+
+	// @TODO colours for scores, perhaps a little animated multi tone stuff for big ones
+	switch s.multiplier {
+	case 1:
+		s.text.Color = colornames.Aqua
+	case 2:
+		s.text.Color = colornames.Coral
+
+	}
+
+	fmt.Fprintf(s.text, "%dx", s.multiplier)
 }
