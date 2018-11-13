@@ -1,0 +1,14 @@
+workspace:
+  base: /go
+  path: src/justapengu.in/beat-phaser
+
+pipeline:
+  build:
+    image: golang:1.11
+    group: build
+    environment:
+    - GOPATH=/go
+    - GO111MODULE=on
+    commands:
+    - apt-get update && apt-get install -y libgl1-mesa-dev xorg-dev libasound2-dev
+    - go build
