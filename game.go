@@ -30,18 +30,6 @@ type game struct {
 }
 
 func (g *game) init() error {
-	var err error
-
-	win, err = pixelgl.NewWindow(pixelgl.WindowConfig{
-		Title:  "Platformer",
-		Bounds: pixel.R(0, 0, 1024, 768),
-		VSync:  true,
-	})
-
-	if err != nil {
-		return err
-	}
-
 	g.world = &world{}
 	g.world.init()
 

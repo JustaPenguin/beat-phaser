@@ -98,6 +98,18 @@ func main() {
 }
 
 func run() {
+	var err error
+
+	win, err = pixelgl.NewWindow(pixelgl.WindowConfig{
+		Title:  "Platformer",
+		Bounds: pixel.R(0, 0, 1024, 768),
+		VSync:  true,
+	})
+
+	if err != nil {
+		panic(err)
+	}
+
 	game := &game{}
 	game.run()
 }
