@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/faiface/pixel/imdraw"
+	"fmt"
 	"golang.org/x/image/colornames"
 	"math"
 	"math/rand"
@@ -16,13 +16,13 @@ func init() {
 }
 
 var (
-	win *pixelgl.Window
+	win    *pixelgl.Window
 	camPos pixel.Vec
-	bpm float64 = 103
+	bpm    float64 = 103
 )
 
 type game struct {
-	score  *score
+	score *score
 
 	world *world
 }
@@ -43,10 +43,9 @@ func (g *game) init() error {
 	g.world = &world{}
 	g.world.init()
 
-
 	g.score = &score{
 		multiplier: 0,
-		pos: pixel.V(0, 0),
+		pos:        pixel.V(0, 0),
 	}
 
 	// camera
@@ -66,13 +65,14 @@ func (g *game) draw() {
 func (g *game) run() {
 	g.init()
 
-	canvas := pixelgl.NewCanvas(pixel.R(-1000/2, -1000/2, 1000/2, 1000/2))
-	imd := imdraw.New(nil)
-	imd.Precision = 32
-
+	canvas := pixelgl.NewCanvas(pixel.R(-160/2, -160/2, 160/2, 160/2))
 	last := time.Now()
+	frames := 0
+	second := time.Tick(time.Second)
+
 	for !win.Closed() {
 		dt := time.Since(last).Seconds()
+		last = time.Now()
 
 		// lerp the camera position towards the body
 		camPos = pixel.Lerp(camPos, g.world.character.body.rect.Center(), 1-math.Pow(1.0/128, dt))
@@ -93,14 +93,10 @@ func (g *game) run() {
 
 		// clear the canvas to black
 		canvas.Clear(colornames.Black)
-		imd.Clear()
 
 		// draw to imd
-		g.world.draw(imd)
+		g.world.draw(canvas)
 		g.score.draw()
-
-		// then draw imd to the canvas
-		imd.Draw(canvas)
 
 		win.Clear(colornames.White)
 		win.SetMatrix(pixel.IM.Scaled(pixel.ZV,
@@ -114,5 +110,13 @@ func (g *game) run() {
 		g.score.text.Draw(win, pixel.IM.Moved(canvas.Bounds().Min))
 
 		win.Update()
+
+		frames++
+		select {
+		case <-second:
+			win.SetTitle(fmt.Sprintf("FPS: %d", frames))
+			frames = 0
+		default:
+		}
 	}
 }

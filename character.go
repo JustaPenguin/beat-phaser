@@ -1,20 +1,21 @@
 package main
 
 import (
-	"github.com/faiface/pixel"
-	"github.com/faiface/pixel/imdraw"
-	"github.com/faiface/pixel/pixelgl"
 	"image/color"
 	"math"
 	"time"
+
+	"github.com/faiface/pixel"
+	"github.com/faiface/pixel/imdraw"
+	"github.com/faiface/pixel/pixelgl"
 )
 
 type character struct {
 	body *body
-	hat *hat
+	hat  *hat
 	fire *fire
 
-	lastClick time.Time
+	lastClick             time.Time
 	increment, multiplier int
 
 	// sounds
@@ -37,8 +38,8 @@ func (c *character) init() {
 		runSpeed:  64,
 		jumpSpeed: 192,
 		rect:      pixel.R(-6, -7, 6, 7),
-		rate:  1.0 / 10,
-		dir:   +1,
+		rate:      1.0 / 10,
+		dir:       +1,
 	}
 	c.body.init()
 
@@ -48,14 +49,14 @@ func (c *character) init() {
 	c.fire = &fire{}
 }
 
-func (c *character) update() {
+func (c *character) update(dt float64) {
 	timeSinceClick := time.Since(c.lastClick).Seconds()
 
 	if win.JustPressed(pixelgl.MouseButtonLeft) {
 		c.lastClick = time.Now()
 
-		if timeSinceClick > 60/bpm + 0.05 || timeSinceClick < 60/bpm - 0.05 {
-			c.increment --
+		if timeSinceClick > 60/bpm+0.05 || timeSinceClick < 60/bpm-0.05 {
+			c.increment--
 
 			if c.increment <= 0 {
 				c.multiplier--
@@ -84,17 +85,20 @@ func (c *character) update() {
 
 		go c.pringlePhaser.play()
 	}
+
+	c.body.update(dt)
+	c.hat.update(dt, c.body.rect.Center())
 }
 
-func (c *character) draw(imd *imdraw.IMDraw) {
-	c.body.draw(imd)
-	c.hat.draw(imd)
+func (c *character) draw(t pixel.Target) {
+	c.body.draw(t)
+	c.hat.draw(t)
 }
 
 type hat struct {
-	pos pixel.Vec
-	counter float64
-	color, altColor   pixel.RGBA
+	pos             pixel.Vec
+	counter         float64
+	color, altColor pixel.RGBA
 }
 
 func (h *hat) init() {
@@ -108,7 +112,9 @@ func (h *hat) update(dt float64, target pixel.Vec) {
 	h.pos.Y += 6
 }
 
-func (h *hat) draw(imd *imdraw.IMDraw) {
+func (h *hat) draw(t pixel.Target) {
+	imd := imdraw.New(nil)
+
 	imd.Color = h.color
 
 	imd.Push(pixel.V(h.pos.X, h.pos.Y))
@@ -124,9 +130,9 @@ func (h *hat) draw(imd *imdraw.IMDraw) {
 	imd.Push(pixel.V(h.pos.X+5, h.pos.Y+1))
 	imd.Push(pixel.V(h.pos.X+5, h.pos.Y+0))
 	imd.Polygon(0)
+
+	imd.Draw(t)
 }
-
-
 
 type body struct {
 	// phys
@@ -262,9 +268,8 @@ func (gp *body) update(dt float64) {
 	}
 }
 
-func (gp *body) draw(imd *imdraw.IMDraw) {
+func (gp *body) draw(t pixel.Target) {
 	x := imdraw.New(gp.sheet)
-	x.Precision = 32
 
 	if gp.sprite == nil {
 		gp.sprite = pixel.NewSprite(nil, pixel.Rect{})
@@ -276,17 +281,16 @@ func (gp *body) draw(imd *imdraw.IMDraw) {
 			gp.rect.W()/gp.sprite.Frame().W(),
 			gp.rect.H()/gp.sprite.Frame().H(),
 		)).
-		ScaledXY(pixel.ZV, pixel.V(-gp.dir, 1)),
+		ScaledXY(pixel.ZV, pixel.V(-gp.dir, 1)).
+		Moved(gp.rect.Center()),
 	)
-
-	x.SetMatrix(pixel.IM.Moved(gp.rect.Center()))
-	imd.Draw(x)
+	x.Draw(t)
 }
 
 // @TODO perhaps 'weapon'?
 
 type laser struct {
-	rect pixel.Rect
+	rect  pixel.Rect
 	color color.Color
 
 	thickness float64
@@ -305,7 +309,7 @@ func (l *laser) draw(imd *imdraw.IMDraw) {
 }
 
 type fire struct {
-	speed float64
+	speed  float64
 	origin pixel.Vec
 	vector pixel.Vec
 
@@ -316,7 +320,7 @@ func (f *fire) now(speed float64, origin pixel.Vec, vector pixel.Vec, color colo
 	f.newLaser = &laser{
 		color: color,
 		// Minus half window size
-		rect: pixel.R(origin.X-512, origin.Y-384, vector.X-512, vector.Y-384),
+		rect:      pixel.R(origin.X-512, origin.Y-384, vector.X-512, vector.Y-384),
 		thickness: 2,
 	}
 }

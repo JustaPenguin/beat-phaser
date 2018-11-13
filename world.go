@@ -17,7 +17,7 @@ type world struct {
 	character *character
 
 	platforms []platform
-	rain *rain
+	rain      *rain
 }
 
 func (w *world) init() {
@@ -45,7 +45,7 @@ func (w *world) init() {
 	var rainDrops []pixel.Vec
 
 	for i := 0; i < 1000; i++ {
-		rainDrops = append(rainDrops, pixel.V((rand.Float64() * (win.Bounds().Max.X)) - win.Bounds().Max.X/2, (rand.Float64() * (win.Bounds().Max.Y)) - win.Bounds().Max.Y/2))
+		rainDrops = append(rainDrops, pixel.V((rand.Float64()*(win.Bounds().Max.X))-win.Bounds().Max.X/2, (rand.Float64()*(win.Bounds().Max.Y))-win.Bounds().Max.Y/2))
 	}
 
 	w.rain = &rain{
@@ -54,18 +54,17 @@ func (w *world) init() {
 }
 
 func (w *world) update(dt float64) {
-	w.rain.update(w.character.body.rect.Center().Y - win.Bounds().Max.Y/2, w.character.body.rect.Center().Y + win.Bounds().Max.Y/2)
-	w.character.update()
+	w.rain.update(w.character.body.rect.Center().Y-win.Bounds().Max.Y/2, w.character.body.rect.Center().Y+win.Bounds().Max.Y/2)
+	w.character.update(dt)
 }
 
-func (w *world) draw(imd *imdraw.IMDraw) {
-	w.rain.draw(imd)
+func (w *world) draw(t pixel.Target) {
+	w.character.draw(t)
+	w.rain.draw(t)
 
 	for _, p := range w.platforms {
-		p.draw(imd)
+		p.draw(t)
 	}
-
-	w.character.draw(imd)
 }
 
 type rain struct {
@@ -73,7 +72,7 @@ type rain struct {
 }
 
 func (r *rain) update(lowerLimit, top float64) {
-	xRange :=  rand.Float64() - 0.5
+	xRange := rand.Float64() - 0.5
 
 	for i := range r.positions {
 		r.positions[i].Y -= rand.Float64()
@@ -85,7 +84,9 @@ func (r *rain) update(lowerLimit, top float64) {
 	}
 }
 
-func (r *rain) draw(imd *imdraw.IMDraw) {
+func (r *rain) draw(t pixel.Target) {
+	imd := imdraw.New(nil)
+
 	imd.Color = color.White
 
 	for _, position := range r.positions {
@@ -95,6 +96,8 @@ func (r *rain) draw(imd *imdraw.IMDraw) {
 		imd.Push(pixel.V(position.X, position.Y-1))
 		imd.Polygon(0)
 	}
+
+	imd.Draw(t)
 }
 
 type platform struct {
@@ -102,8 +105,12 @@ type platform struct {
 	color color.Color
 }
 
-func (p *platform) draw(imd *imdraw.IMDraw) {
+func (p *platform) draw(t pixel.Target) {
+	imd := imdraw.New(nil)
+
 	imd.Color = p.color
 	imd.Push(p.rect.Min, p.rect.Max)
 	imd.Rectangle(0)
+
+	imd.Draw(t)
 }

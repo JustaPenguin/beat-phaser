@@ -84,7 +84,6 @@ func loadAnimationSheet(sheetPath, descPath string, frameWidth float64) (sheet p
 	return sheet, anims, nil
 }
 
-
 type animState int
 
 const (
@@ -95,7 +94,7 @@ const (
 
 type score struct {
 	multiplier int
-	pos pixel.Vec
+	pos        pixel.Vec
 
 	text *text.Text
 }
@@ -148,6 +147,7 @@ func loadPicture(path string) (pixel.Picture, error) {
 	}
 	return pixel.PictureDataFromImage(img), nil
 }
+
 /*
 func run() {
 
@@ -229,18 +229,17 @@ func main() {
 }
 
 func run() {
-
 	game := &game{}
 	game.run()
 }
 
 type soundEffect struct {
 	filePath string
-	format beep.Format
-	decoded beep.StreamSeekCloser
+	format   beep.Format
+	decoded  beep.StreamSeekCloser
 }
 
-func(s *soundEffect) load() {
+func (s *soundEffect) load() {
 	f1, err := os.Open(s.filePath)
 
 	if err != nil {
@@ -263,9 +262,9 @@ func (s *soundEffect) play() {
 	// Base is 2 for human-natural, 10 would be decibels
 	effectVolume := effects.Volume{
 		Streamer: s.decoded,
-		Base: 2,
-		Volume: -3,
-		Silent: true,
+		Base:     2,
+		Volume:   -3,
+		Silent:   true,
 	}
 
 	speaker.Play(beep.Seq(&effectVolume, beep.Callback(func() {
@@ -292,13 +291,12 @@ func loadAudio() {
 
 	songVolume := effects.Volume{
 		Streamer: s1,
-		Base: 2,
-		Volume: -3,
-		Silent: true,
+		Base:     2,
+		Volume:   -3,
+		Silent:   true,
 	}
 
 	speaker.Play(beep.Seq(&songVolume, beep.Callback(func() {
-		println("close")
 		close(playing)
 	})))
 	<-playing
