@@ -21,11 +21,11 @@ var (
 	win    *pixelgl.Window
 	camPos pixel.Vec
 	bpm    float64 = 103
+
+	gameScore *score
 )
 
 type game struct {
-	score *score
-
 	world *world
 }
 
@@ -33,7 +33,7 @@ func (g *game) init() error {
 	g.world = &world{}
 	g.world.init()
 
-	g.score = &score{
+	gameScore = &score{
 		multiplier: 0,
 		pos:        pixel.V(0, 0),
 	}
@@ -52,9 +52,8 @@ func (g *game) draw(canvas *pixelgl.Canvas) {
 	// clear the canvas to black
 	canvas.Clear(colornames.Black)
 
-	// draw to imd
 	g.world.draw(canvas)
-	g.score.draw()
+	gameScore.draw()
 
 	win.Clear(colornames.White)
 	win.SetMatrix(pixel.IM.Scaled(pixel.ZV,
@@ -65,7 +64,7 @@ func (g *game) draw(canvas *pixelgl.Canvas) {
 	).Moved(win.Bounds().Center()))
 	canvas.Draw(win, pixel.IM.Moved(canvas.Bounds().Center()))
 
-	g.score.text.Draw(win, pixel.IM.Moved(canvas.Bounds().Min))
+	gameScore.text.Draw(win, pixel.IM.Moved(canvas.Bounds().Min))
 }
 
 func (g *game) run() {
@@ -117,7 +116,7 @@ type score struct {
 	text *text.Text
 }
 
-func (s *score) update(multiplier int) {
+func (s *score) setMultiplier(multiplier int) {
 	s.multiplier = multiplier
 }
 

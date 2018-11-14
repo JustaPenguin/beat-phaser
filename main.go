@@ -102,7 +102,7 @@ func run() {
 
 	win, err = pixelgl.NewWindow(pixelgl.WindowConfig{
 		Title:  "Platformer",
-		Bounds: pixel.R(0, 0, 1024, 768),
+		Bounds: pixel.R(0, 0, 768, 768),
 		VSync:  true,
 	})
 

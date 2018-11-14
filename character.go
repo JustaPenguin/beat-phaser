@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+	"golang.org/x/image/colornames"
 	"image/color"
 	"math"
 	"time"
@@ -13,24 +15,10 @@ import (
 type character struct {
 	body *body
 	hat  *hat
-	fire *fire
-
-	lastClick             time.Time
-	increment, multiplier int
-
-	// sounds
-	pringlePhaser *soundEffect
+	weapon *weapon
 }
 
 func (c *character) init() {
-	if c.pringlePhaser == nil {
-		c.pringlePhaser = &soundEffect{
-			filePath: "audio/effects/pringle-phaser.ogg",
-		}
-		c.pringlePhaser.load()
-	}
-
-	c.lastClick = time.Now()
 
 	c.body = &body{
 		// phys
@@ -46,53 +34,31 @@ func (c *character) init() {
 	c.hat = &hat{color: pixel.RGB(float64(255)/float64(255), 0, float64(250)/float64(255)), altColor: pixel.RGB(float64(32)/float64(255), float64(22)/float64(255), float64(249)/float64(156))}
 	c.hat.init()
 
-	c.fire = &fire{}
+	c.weapon = &weapon{
+		speed: 3,
+		points: []pixel.Vec{
+			pixel.V(0, 0),
+			pixel.V(1, 0),
+			pixel.V(2, 0),
+			pixel.V(2, 2),
+			pixel.V(3, 2),
+			pixel.V(4, 2),
+			pixel.V(5, 2),
+		},
+	}
+	c.weapon.init()
 }
 
 func (c *character) update(dt float64) {
-	timeSinceClick := time.Since(c.lastClick).Seconds()
-
-	if win.JustPressed(pixelgl.MouseButtonLeft) {
-		c.lastClick = time.Now()
-
-		if timeSinceClick > 60/bpm+0.05 || timeSinceClick < 60/bpm-0.05 {
-			c.increment--
-
-			if c.increment <= 0 {
-				c.multiplier--
-				c.increment = 8
-			}
-
-			if c.multiplier < 0 {
-				c.multiplier = 0
-			}
-
-			c.fire.now(128, win.Bounds().Center().Add(c.body.rect.Center()), win.MousePosition().Add(camPos), color.White)
-		} else {
-			c.increment++
-
-			if c.increment >= 8 {
-				c.multiplier++
-				c.increment = 0
-			}
-
-			if c.multiplier > 8 {
-				c.multiplier = 8
-			}
-
-			c.fire.now(128, win.Bounds().Center().Add(c.body.rect.Center()), win.MousePosition().Add(camPos), randomNiceColor())
-		}
-
-		go c.pringlePhaser.play()
-	}
-
 	c.body.update(dt)
 	c.hat.update(dt, c.body.rect.Center())
+	c.weapon.update(dt, c.body.rect.Center().Add(pixel.V(8, 2)))
 }
 
 func (c *character) draw(t pixel.Target) {
 	c.body.draw(t)
 	c.hat.draw(t)
+	c.weapon.draw(t, c.body.rect.Center().Add(pixel.V(5, 0)))
 }
 
 type hat struct {
@@ -295,46 +261,167 @@ func (gp *body) draw(t pixel.Target) {
 	x.Draw(t)
 }
 
-// @TODO perhaps 'weapon'?
-
 type laser struct {
-	rect  pixel.Rect
 	color color.Color
+	expired bool
+	angle float64
+
+	velocity pixel.Vec
+
+	pos pixel.Vec
 
 	thickness float64
 }
 
-func (l *laser) draw(imd *imdraw.IMDraw) {
-	imd.Color = l.color
-	imd.EndShape = imdraw.RoundEndShape
-
-	imd.Push(pixel.V(l.rect.Min.X, l.rect.Min.Y), pixel.V(l.rect.Max.X, l.rect.Max.Y))
-	imd.Line(l.thickness)
+func (l *laser) update(dt float64) {
+	// move the position or expire the laser
+	l.pos = l.pos.Add(l.velocity.Rotated(l.angle))
 
 	if l.thickness > 0 {
 		l.thickness = l.thickness - 0.02
 	}
 }
 
-type fire struct {
-	speed  float64
-	origin pixel.Vec
-	vector pixel.Vec
+func (l *laser) draw(imd *imdraw.IMDraw) {
+	imd.Color = l.color
+	imd.EndShape = imdraw.RoundEndShape
 
-	newLaser *laser
+	imd.Push(l.pos, l.pos.Add(pixel.V(5, 0).Rotated(l.angle)))
+	imd.Line(l.thickness)
 }
 
-func (f *fire) now(speed float64, origin pixel.Vec, vector pixel.Vec, color color.Color) {
-	f.newLaser = &laser{
-		color: color,
-		// Minus half window size
-		rect:      pixel.R(origin.X-512, origin.Y-384, vector.X-512, vector.Y-384),
-		thickness: 2,
+type weapon struct {
+	lasers []*laser
+	speed float64
+	points []pixel.Vec
+
+	lastClick             time.Time
+	imdraw *imdraw.IMDraw
+
+	increment, multiplier int
+
+	// sounds
+	pringlePhaser *soundEffect
+}
+
+func (w *weapon) init() {
+	w.lastClick = time.Now()
+
+	if w.imdraw == nil {
+		w.imdraw = imdraw.New(nil)
+	}
+
+	if w.pringlePhaser == nil {
+		w.pringlePhaser = &soundEffect{
+			filePath: "audio/effects/pringle-phaser.ogg",
+		}
+		w.pringlePhaser.load()
 	}
 }
 
-func (f *fire) draw(imd *imdraw.IMDraw) {
-	if f.newLaser != nil {
-		f.newLaser.draw(imd)
+func (w *weapon) fire(origin pixel.Vec, angle float64, color color.Color) {
+	w.lasers = append(w.lasers, &laser{
+		color: color,
+		velocity: pixel.V(w.speed, 0),
+		angle: angle,
+		pos: origin,
+		// Minus half window size
+		thickness: 2,
+	})
+}
+
+func (w *weapon) draw(t pixel.Target, parent pixel.Vec) {
+	w.imdraw.Clear()
+
+	w.imdraw.Color = colornames.Blueviolet
+
+	for _, pt := range w.points {
+		w.imdraw.Push(pt.Add(parent))
+	}
+
+	w.imdraw.Polygon(1)
+
+	for _, laser := range w.lasers {
+		laser.draw(w.imdraw)
+	}
+
+	w.imdraw.Draw(t)
+}
+
+func todegrees(rads float64) float64 {
+	return rads * (180/math.Pi)
+}
+
+func angleBetweenVectors(v1, v2 pixel.Vec) float64 {
+	angle := math.Atan2(v2.Y, v2.X) - math.Atan2(v1.Y, v2.X)
+
+	if angle < 0 {
+		angle += 2 * math.Pi
+	}
+
+	return angle
+}
+
+func (w *weapon) update(dt float64, characterPos pixel.Vec) {
+	timeSinceClick := time.Since(w.lastClick).Seconds()
+
+	if win.JustPressed(pixelgl.MouseButtonLeft) {
+		w.lastClick = time.Now()
+
+		println("a", camPos.Angle())
+		//a := win.MousePosition().Angle() - characterPos.Add(win.Bounds().Center()).Angle()
+		fmt.Println(win.MousePosition())
+		fmt.Println(win.Bounds().Center())
+		a := angleBetweenVectors(pixel.V(0, 0), win.Bounds().Center().Sub(win.MousePosition()))
+
+		if win.MousePosition().X < win.Bounds().Center().X {
+			a -= math.Pi
+		}
+
+		//a := angleBetweenVectors(win.Bounds().Center(), win.Bounds().Center().Sub(win.MousePosition()))
+
+		fmt.Println(todegrees(a))
+
+		if timeSinceClick > 60/bpm+0.05 || timeSinceClick < 60/bpm-0.05 {
+			w.increment--
+
+			if w.increment <= 0 {
+				w.multiplier--
+				w.increment = 8
+			}
+
+			if w.multiplier < 0 {
+				w.multiplier = 0
+			}
+
+			w.fire(characterPos, a, color.White)
+		} else {
+			w.increment++
+
+			if w.increment >= 8 {
+				w.multiplier++
+				w.increment = 0
+			}
+
+			if w.multiplier > 8 {
+				w.multiplier = 8
+			}
+
+			w.fire(characterPos, a, randomNiceColor())
+		}
+
+		gameScore.setMultiplier(w.multiplier)
+
+		go w.pringlePhaser.play()
+	}
+
+	var expiredLasers []int
+
+	for i, laser := range w.lasers {
+		laser.update(dt)
+
+		if laser.expired {
+			expiredLasers = append(expiredLasers, i)
+		}
 	}
 }
