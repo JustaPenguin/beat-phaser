@@ -71,7 +71,7 @@ func (g *game) draw(canvas *pixelgl.Canvas) {
 func (g *game) run() {
 	g.init()
 
-	canvas := pixelgl.NewCanvas(pixel.R(-160/2, -160/2, 160/2, 160/2))
+	canvas := pixelgl.NewCanvas(pixel.R(-1920/2, -1080/2, 1920/2, 1080/2))
 	last := time.Now()
 	frames := 0
 	second := time.Tick(time.Second)

@@ -35,11 +35,11 @@ func (c *character) init() {
 	c.body = &body{
 		// phys
 		gravity:   -512,
-		runSpeed:  64,
+		runSpeed:  128,
 		jumpSpeed: 192,
-		rect:      pixel.R(-6, -7, 6, 7),
+		rect:      pixel.R(-62, -74, 62, 74),
 		rate:      1.0 / 10,
-		dir:       +1,
+		dir:       1,
 	}
 	c.body.init()
 
@@ -168,7 +168,7 @@ func (gp *body) init() {
 	if gp.sheet == nil || gp.anims == nil {
 		var err error
 
-		gp.sheet, gp.anims, err = loadAnimationSheet("gopher", 12)
+		gp.sheet, gp.anims, err = loadAnimationSheet("spike", 124)
 
 		if err != nil {
 			panic(err)
@@ -233,8 +233,6 @@ func (gp *body) update(dt float64) {
 	// determine the new animation state
 	var newState gopherAnimationState
 	switch {
-	case !gp.ground:
-		newState = jumping
 	case gp.vel.Len() == 0:
 		newState = idle
 	case gp.vel.Len() > 0:
@@ -250,7 +248,8 @@ func (gp *body) update(dt float64) {
 	// determine the correct animation frame
 	switch gp.state {
 	case idle:
-		gp.frame = gp.anims["Front"][0]
+		i := int(math.Floor(gp.counter / gp.rate/2))
+		gp.frame = gp.anims["Front"][i%len(gp.anims["Front"])]
 	case running:
 		i := int(math.Floor(gp.counter / gp.rate))
 		gp.frame = gp.anims["Run"][i%len(gp.anims["Run"])]
@@ -260,18 +259,18 @@ func (gp *body) update(dt float64) {
 		if i < 0 {
 			i = 0
 		}
-		if i >= len(gp.anims["Jump"]) {
-			i = len(gp.anims["Jump"]) - 1
+		if i >= len(gp.anims["Front"]) {
+			i = len(gp.anims["Front"]) - 1
 		}
-		gp.frame = gp.anims["Jump"][i]
+		gp.frame = gp.anims["Front"][i]
 	}
 
 	// set the facing direction of the body
 	if gp.vel.X != 0 {
 		if gp.vel.X > 0 {
-			gp.dir = +1
-		} else {
 			gp.dir = -1
+		} else {
+			gp.dir = +1
 		}
 	}
 }
