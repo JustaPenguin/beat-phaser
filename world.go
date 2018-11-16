@@ -10,6 +10,7 @@ import (
 
 type world struct {
 	character *character
+	enemies   *enemiesCollection
 
 	platforms []platform
 	rain      *rain
@@ -20,6 +21,7 @@ type world struct {
 
 func (w *world) init() {
 	w.character = &character{}
+	w.enemies = &enemiesCollection{}
 	w.character.init()
 	w.mainScene = imdraw.New(nil)
 	w.weather = imdraw.New(nil)
@@ -56,6 +58,7 @@ func (w *world) init() {
 func (w *world) update(dt float64) {
 	w.rain.update(w.character.body.rect.Center().Y-win.Bounds().Max.Y/2, w.character.body.rect.Center().Y+win.Bounds().Max.Y/2)
 	w.character.update(dt)
+	w.enemies.update(dt, w.character.body.rect.Center())
 }
 
 func (w *world) draw(t pixel.Target) {
@@ -63,6 +66,7 @@ func (w *world) draw(t pixel.Target) {
 	w.weather.Clear()
 
 	w.character.draw(t)
+	w.enemies.draw(t)
 	w.rain.draw(w.weather)
 
 	for _, p := range w.platforms {
