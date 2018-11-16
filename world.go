@@ -72,7 +72,7 @@ func (w *world) draw(t pixel.Target) {
 	w.weather.Clear()
 
 	for _, room := range w.rooms {
-		room.draw(t)
+		room.drawnRoom.Draw(t)
 	}
 
 	w.character.draw(t)
@@ -128,6 +128,7 @@ func (p *platform) draw(imd *imdraw.IMDraw) {
 
 type room struct {
 	path string
+	drawnRoom *imdraw.IMDraw
 
 	img pixel.Picture
 	imd *imdraw.IMDraw
@@ -143,10 +144,13 @@ func(r *room) init(path string) {
 	}
 
 	r.sprite = pixel.NewSprite(r.img, r.img.Bounds())
+
+	r.drawnRoom = imdraw.New(r.img)
+	r.draw(r.drawnRoom)
 }
 
 func (r *room) draw(t pixel.Target) {
-	r.sprite.Draw(t, pixel.IM.Scaled(r.sprite.Frame().Center(), 4))
+	r.sprite.Draw(t, pixel.IM.Scaled(r.sprite.Frame().Center(), 2.5))
 	//r.sprite.Draw(t, pixel.IM)
 }
 

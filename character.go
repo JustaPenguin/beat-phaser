@@ -143,6 +143,8 @@ const (
 )
 
 type body struct {
+	imd *imdraw.IMDraw
+
 	// phys
 	gravity   float64
 	runSpeed  float64
@@ -276,22 +278,27 @@ func (gp *body) update(dt float64) {
 }
 
 func (gp *body) draw(t pixel.Target) {
-	x := imdraw.New(gp.sheet)
+	if gp.imd == nil {
+		gp.imd = imdraw.New(gp.sheet)
+	}
+
+	gp.imd.Clear()
 
 	if gp.sprite == nil {
 		gp.sprite = pixel.NewSprite(nil, pixel.Rect{})
 	}
 	// draw the correct frame with the correct position and direction
 	gp.sprite.Set(gp.sheet, gp.frame)
-	gp.sprite.Draw(x, pixel.IM.
+	gp.sprite.Draw(gp.imd, pixel.IM.
 		ScaledXY(pixel.ZV, pixel.V(
 			gp.rect.W()/gp.sprite.Frame().W(),
-			gp.rect.H()/gp.sprite.Frame().H(),
+			gp.rect.H()/gp.sprite.Frame().H()/1.5,
 		)).
 		ScaledXY(pixel.ZV, pixel.V(-gp.dir, 1)).
 		Moved(gp.rect.Center()),
 	)
-	x.Draw(t)
+
+	gp.imd.Draw(t)
 }
 
 // @TODO perhaps 'weapon'?
