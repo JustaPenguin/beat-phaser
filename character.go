@@ -292,7 +292,7 @@ func (gp *body) draw(t pixel.Target) {
 	gp.sprite.Draw(gp.imd, pixel.IM.
 		ScaledXY(pixel.ZV, pixel.V(
 			gp.rect.W()/gp.sprite.Frame().W(),
-			gp.rect.H()/gp.sprite.Frame().H()/1.5,
+			gp.rect.H()/gp.sprite.Frame().H(),
 		)).
 		ScaledXY(pixel.ZV, pixel.V(-gp.dir, 1)).
 		Moved(gp.rect.Center()),

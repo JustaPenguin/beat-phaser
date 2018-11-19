@@ -27,7 +27,7 @@ func (w *world) init() {
 	w.mainScene = imdraw.New(nil)
 	w.weather = imdraw.New(nil)
 
-	w.rooms = append(w.rooms, &room{path: "images/world/rooms/room1.png"})
+	w.rooms = append(w.rooms, &room{path: "images/world/rooms/room2.png"})
 
 	for _, room := range w.rooms {
 		room.init(room.path)
@@ -150,8 +150,8 @@ func(r *room) init(path string) {
 }
 
 func (r *room) draw(t pixel.Target) {
-	r.sprite.Draw(t, pixel.IM.Scaled(r.sprite.Frame().Center(), 2.5))
-	//r.sprite.Draw(t, pixel.IM)
+	//r.sprite.Draw(t, pixel.IM.Scaled(r.sprite.Frame().Center(), 2.5))
+	r.sprite.Draw(t, pixel.IM)
 }
 
 func loadPicture(path string) (pixel.Picture, error) {
