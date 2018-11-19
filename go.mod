@@ -1,6 +1,7 @@
 module justapengu.in/beat-phaser
 
 require (
+	github.com/Tarliton/collision2d v0.0.0-20160527013055-f7a088279920 // indirect
 	github.com/faiface/beep v0.0.0-20181006150002-186a1b19424c
 	github.com/faiface/glhf v0.0.0-20181018222622-82a6317ac380 // indirect
 	github.com/faiface/mainthread v0.0.0-20171120011319-8b78f0a41ae3 // indirect

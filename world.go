@@ -1,17 +1,17 @@
 package main
 
 import (
-	"image/color"
-	"math/rand"
-
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/imdraw"
+	"golang.org/x/image/colornames"
+	"image/color"
+	"math/rand"
 )
 
 type world struct {
 	character *character
 
-	platforms []platform
+	platforms []*platform
 	rain      *rain
 
 	weather   *imdraw.IMDraw
@@ -24,8 +24,8 @@ func (w *world) init() {
 	w.mainScene = imdraw.New(nil)
 	w.weather = imdraw.New(nil)
 
-	w.platforms = []platform{
-		{rect: pixel.R(-50, -34, 50, -32)},
+	w.platforms = []*platform{
+		{rect: pixel.R(-26, -50, -25, 50)},
 		{rect: pixel.R(20, 0, 70, 2)},
 		{rect: pixel.R(-100, 10, -50, 12)},
 		{rect: pixel.R(120, -22, 140, -20)},
@@ -40,6 +40,7 @@ func (w *world) init() {
 	}
 	for i := range w.platforms {
 		w.platforms[i].color = randomNiceColor()
+		RegisterCollidable(w.platforms[i])
 	}
 
 	var rainDrops []pixel.Vec
@@ -63,7 +64,7 @@ func (w *world) draw(t pixel.Target) {
 	w.weather.Clear()
 
 	w.character.draw(t)
-	w.rain.draw(w.weather)
+	//w.rain.draw(w.weather)
 
 	for _, p := range w.platforms {
 		p.draw(w.mainScene)
@@ -105,6 +106,14 @@ func (r *rain) draw(imd *imdraw.IMDraw) {
 type platform struct {
 	rect  pixel.Rect
 	color color.Color
+}
+
+func (p *platform) Rect() pixel.Rect {
+	return p.rect
+}
+
+func (p *platform) HandleCollision(x Collidable) {
+	p.color = colornames.Lightgoldenrodyellow
 }
 
 func (p *platform) draw(imd *imdraw.IMDraw) {

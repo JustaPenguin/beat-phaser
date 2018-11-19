@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/faiface/pixel"
+	"github.com/faiface/pixel/imdraw"
 	"github.com/faiface/pixel/pixelgl"
 	"github.com/faiface/pixel/text"
 	"golang.org/x/image/colornames"
@@ -27,6 +28,8 @@ var (
 
 type game struct {
 	world *world
+
+	collisionBoxes *imdraw.IMDraw
 }
 
 func (g *game) init() error {
@@ -48,12 +51,22 @@ func (g *game) update(dt float64) {
 	g.world.update(dt)
 }
 
+var drawCollisionBoxes = false
+
 func (g *game) draw(canvas *pixelgl.Canvas) {
 	// clear the canvas to black
 	canvas.Clear(colornames.Black)
 
 	g.world.draw(canvas)
 	gameScore.draw()
+
+	if win.JustPressed(pixelgl.KeyC) {
+		drawCollisionBoxes = !drawCollisionBoxes
+	}
+
+	if drawCollisionBoxes {
+		g.drawCollisionBoxes(canvas)
+	}
 
 	win.Clear(colornames.White)
 	win.SetMatrix(pixel.IM.Scaled(pixel.ZV,
@@ -67,13 +80,42 @@ func (g *game) draw(canvas *pixelgl.Canvas) {
 	gameScore.text.Draw(win, pixel.IM.Moved(canvas.Bounds().Min))
 }
 
+func (g *game) collisions() {
+	for obj := range collidables {
+		if cs := Collision(obj); len(cs) > 0 {
+			for _, c := range cs {
+				obj.HandleCollision(c)
+			}
+		}
+	}
+}
+
+func (g *game) drawCollisionBoxes(t pixel.Target) {
+	if g.collisionBoxes == nil {
+		g.collisionBoxes = imdraw.New(nil)
+	}
+
+	g.collisionBoxes.Clear()
+	g.collisionBoxes.Color = colornames.Lemonchiffon
+
+	for collidable, prevRect := range collidables {
+		rect := collidable.Rect().Norm().Union(prevRect.Norm())
+
+		g.collisionBoxes.Push(rect.Min, rect.Max)
+		g.collisionBoxes.Rectangle(1)
+	}
+
+	g.collisionBoxes.Draw(t)
+}
+
 func (g *game) run() {
 	g.init()
 
-	canvas := pixelgl.NewCanvas(pixel.R(-160/2, -160/2, 160/2, 160/2))
+	canvas := pixelgl.NewCanvas(pixel.R(-1920/8, -1080/8, 1920/8, 1080/8))
+	second := time.Tick(time.Second)
+
 	last := time.Now()
 	frames := 0
-	second := time.Tick(time.Second)
 
 	for !win.Closed() {
 		dt := time.Since(last).Seconds()
@@ -94,9 +136,12 @@ func (g *game) run() {
 			g.init()
 		}
 
+		g.collisions()
 		g.update(dt)
-		g.draw(canvas)
 
+		updatePositions()
+
+		g.draw(canvas)
 		win.Update()
 
 		frames++
