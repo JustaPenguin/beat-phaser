@@ -30,7 +30,7 @@ func (c *character) HandleCollision(x Collidable) {
 			c.body.vel.Y = 0
 		} else if int(c.body.rect.Center().Y) <= int(r.Min.Y) {
 			// below
-			c.body.rect = c.body.rect.Moved(pixel.V(0, a.rect.Min.Y-c.body.rect.Max.Y))
+			c.body.rect = c.body.rect.Moved(pixel.V(0, a.rect.Min.Y-c.body.rect.Max.Y-5)) // -5 - hat
 			c.body.vel.Y = 0
 		} else if int(c.body.rect.Center().X) <= int(r.Min.X) {
 			// left
@@ -45,7 +45,10 @@ func (c *character) HandleCollision(x Collidable) {
 }
 
 func (c *character) Rect() pixel.Rect {
-	return c.body.rect
+	r := c.body.rect
+	r.Max = r.Max.Add(pixel.V(0, 5)) // hat
+
+	return r
 }
 
 func (c *character) die() {
