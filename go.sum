@@ -1,5 +1,3 @@
-github.com/Tarliton/collision2d v0.0.0-20160527013055-f7a088279920 h1:0IrTIOtqYxunLFS7/NZtdHDXifo0sjOnw2y2EhvDIFE=
-github.com/Tarliton/collision2d v0.0.0-20160527013055-f7a088279920/go.mod h1:xQkVqGFqY6zzdXxydhfUfJQfmSIAyx0XavFZgQK0F5o=
 github.com/faiface/beep v0.0.0-20181006150002-186a1b19424c h1:zpnxPI/dTQVcu40VQpB74yZZ3I9NfwBh6DkOTpxv0Cs=
 github.com/faiface/beep v0.0.0-20181006150002-186a1b19424c/go.mod h1:A22Xnws4HqzY9DZEtQCbYRbS1858XfgH6SCFUeRiXDI=
 github.com/faiface/glhf v0.0.0-20181018222622-82a6317ac380 h1:FvZ0mIGh6b3kOITxUnxS3tLZMh7yEoHo75v3/AgUqg0=
@@ -14,9 +12,13 @@ github.com/go-gl/glfw v0.0.0-20181014061658-691ee1b84c51 h1:elGSwayRx7uAsfA5PnVK
 github.com/go-gl/glfw v0.0.0-20181014061658-691ee1b84c51/go.mod h1:vR7hzQXu2zJy9AVAgeJqvqgH9Q5CA+iKCZ2gyEVpxRU=
 github.com/go-gl/mathgl v0.0.0-20180804195959-cdf14b6b8f8a h1:2n5w2v3knlspzjJWyQPC0j88Mwvq0SZV0Jdws34GJwc=
 github.com/go-gl/mathgl v0.0.0-20180804195959-cdf14b6b8f8a/go.mod h1:dvrdneKbyWbK2skTda0nM4B9zSlS2GZSnjX7itr/skQ=
+github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0 h1:DACJavvAHhabrF08vX0COfcOBJRhZ8lUbR+ZWIs0Y5g=
+github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0/go.mod h1:E/TSTwGwJL78qG/PmXZO1EjYhfJinVAhrmmHX6Z8B9k=
 github.com/gopherjs/gopherjs v0.0.0-20180628210949-0892b62f0d9f/go.mod h1:wJfORRmW1u3UXTncJ5qlYoELFm8eSnnEO6hX4iZ3EWY=
+github.com/gopherjs/gopherjs v0.0.0-20180825215210-0210a2f0f73c h1:16eHWuMGvCjSfgRJKqIzapE78onvvTbdi1rMkU00lZw=
 github.com/gopherjs/gopherjs v0.0.0-20180825215210-0210a2f0f73c/go.mod h1:wJfORRmW1u3UXTncJ5qlYoELFm8eSnnEO6hX4iZ3EWY=
 github.com/gopherjs/gopherwasm v0.1.1/go.mod h1:kx4n9a+MzHH0BJJhvlsQ65hqLFXDO/m256AsaDPQ+/4=
+github.com/gopherjs/gopherwasm v1.0.0 h1:32nge/RlujS1Im4HNCJPp0NbBOAeBXFuT1KonUuLl+Y=
 github.com/gopherjs/gopherwasm v1.0.0/go.mod h1:SkZ8z7CWBz5VXbhJel8TxCmAcsQqzgWGR/8nMhyhZSI=
 github.com/hajimehoshi/go-mp3 v0.1.1 h1:Y33fAdTma70fkrxnc9u50Uq0lV6eZ+bkAlssdMmCwUc=
 github.com/hajimehoshi/go-mp3 v0.1.1/go.mod h1:4i+c5pDNKDrxl1iu9iG90/+fhP37lio6gNhjCx9WBJw=
@@ -29,9 +31,12 @@ github.com/jfreymuth/vorbis v1.0.0 h1:SmDf783s82lIjGZi8EGUUaS7YxPHgRj4ZXW/h7rUi7
 github.com/jfreymuth/vorbis v1.0.0/go.mod h1:8zy3lUAm9K/rJJk223RKy6vjCZTWC61NA2QD06bfOE0=
 github.com/pkg/errors v0.8.0 h1:WdK/asTD0HN+q6hsWO3/vpuAkAr+tw6aNJNDFFf0+qw=
 github.com/pkg/errors v0.8.0/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
+golang.org/x/exp v0.0.0-20180710024300-14dda7b62fcd h1:nLIcFw7GiqKXUS7HiChg6OAYWgASB2H97dZKd1GhDSs=
 golang.org/x/exp v0.0.0-20180710024300-14dda7b62fcd/go.mod h1:CJ0aWSM057203Lf6IL+f9T1iT9GByDxfZKAQTCR3kQA=
 golang.org/x/image v0.0.0-20180708004352-c73c2afc3b81/go.mod h1:ux5Hcp/YLpHSI86hEcLt0YII63i6oz57MZXIpbrjZUs=
 golang.org/x/image v0.0.0-20181109232246-249dc8530c0e h1:tKeLpam+QnQXh80ue3KM7AcmYlUyEn8j00wnh3XphNk=
 golang.org/x/image v0.0.0-20181109232246-249dc8530c0e/go.mod h1:ux5Hcp/YLpHSI86hEcLt0YII63i6oz57MZXIpbrjZUs=
+golang.org/x/mobile v0.0.0-20180806140643-507816974b79 h1:t2JRgCWkY7Qaa1J2jal+wqC9OjbyHCHwIA9rVlRUSMo=
 golang.org/x/mobile v0.0.0-20180806140643-507816974b79/go.mod h1:z+o9i4GpDbdi3rU15maQ/Ox0txvL9dWGYEHz965HBQE=
+golang.org/x/sys v0.0.0-20180806082429-34b17bdb4300 h1:eJa+6+7jje7fOYUrLnwKNR9kcpvLANj1Asw0Ou1pBiI=
 golang.org/x/sys v0.0.0-20180806082429-34b17bdb4300/go.mod h1:STP8DvDyc/dI5b8T5hshtkjS+E42TnysNCUPdjciGhY=
