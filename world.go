@@ -8,13 +8,14 @@ import (
 
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/imdraw"
+	"golang.org/x/image/colornames"
 )
 
 type world struct {
 	character *character
 	enemies   *enemiesCollection
 
-	platforms []platform
+	platforms []*platform
 	rain      *rain
 	rooms     []*room
 
@@ -35,7 +36,7 @@ func (w *world) init() {
 		room.init(room.path)
 	}
 
-	w.platforms = []platform{
+	w.platforms = []*platform{
 		{rect: pixel.R(-50, -34, 50, -32)},
 		{rect: pixel.R(20, 0, 70, 2)},
 		{rect: pixel.R(-100, 10, -50, 12)},
@@ -51,6 +52,7 @@ func (w *world) init() {
 	}
 	for i := range w.platforms {
 		w.platforms[i].color = randomNiceColor()
+		registerCollidable(w.platforms[i])
 	}
 
 	var rainDrops []pixel.Vec
@@ -124,6 +126,14 @@ type platform struct {
 	color color.Color
 }
 
+func (p *platform) Rect() pixel.Rect {
+	return p.rect
+}
+
+func (p *platform) HandleCollision(x Collidable) {
+	p.color = colornames.Lightgoldenrodyellow
+}
+
 func (p *platform) draw(imd *imdraw.IMDraw) {
 	imd.Color = p.color
 	imd.Push(p.rect.Min, p.rect.Max)
@@ -131,15 +141,15 @@ func (p *platform) draw(imd *imdraw.IMDraw) {
 }
 
 type room struct {
-	path string
+	path      string
 	drawnRoom *imdraw.IMDraw
 
-	img pixel.Picture
-	imd *imdraw.IMDraw
+	img    pixel.Picture
+	imd    *imdraw.IMDraw
 	sprite *pixel.Sprite
 }
 
-func(r *room) init(path string) {
+func (r *room) init(path string) {
 	var err error
 
 	r.img, err = loadPicture(path)

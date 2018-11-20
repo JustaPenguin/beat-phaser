@@ -10,30 +10,29 @@ type enemiesCollection struct {
 	enemies []enemy
 
 	counter float64
-	step 	float64
+	step    float64
 }
 
-func(e *enemiesCollection) init() {
+func (e *enemiesCollection) init() {
 	e.enemies = append(e.enemies, enemy{
 		initialPos: pixel.Vec{X: 0, Y: 0},
-		pos: pixel.Vec{X: 0, Y: 0},
-		moveSpeed: 0.2,
+		pos:        pixel.Vec{X: 0, Y: 0},
+		moveSpeed:  0.2,
 
 		color1: randomNiceColor(),
 		color2: randomNiceColor(),
-
 
 		imd: imdraw.New(nil),
 	})
 
 	e.step = 20
 
-	for i :=range e.enemies {
+	for i := range e.enemies {
 		e.enemies[i].init()
 	}
 }
 
-func(e *enemiesCollection) update(dt float64, targetPos pixel.Vec) {
+func (e *enemiesCollection) update(dt float64, targetPos pixel.Vec) {
 	e.counter += dt
 
 	// e.step seconds have passed, add a new enemy (and increase spawn rate)
@@ -42,8 +41,8 @@ func(e *enemiesCollection) update(dt float64, targetPos pixel.Vec) {
 		if e.counter > e.step {
 			e.enemies = append(e.enemies, enemy{
 				initialPos: pixel.Vec{X: 0, Y: 0},
-				pos:       pixel.Vec{X: 0, Y: 0},
-				moveSpeed: 0.2,
+				pos:        pixel.Vec{X: 0, Y: 0},
+				moveSpeed:  0.2,
 
 				color1: randomNiceColor(),
 				color2: randomNiceColor(),
@@ -66,22 +65,22 @@ func(e *enemiesCollection) update(dt float64, targetPos pixel.Vec) {
 	}
 }
 
-func(e *enemiesCollection) draw(t pixel.Target) {
+func (e *enemiesCollection) draw(t pixel.Target) {
 	for i := range e.enemies {
 		e.enemies[i].draw(t)
 	}
 }
 
 type enemy struct {
-	pos pixel.Vec
+	pos       pixel.Vec
 	moveSpeed float64
 
 	initialPos pixel.Vec
-	midPoint pixel.Vec
-	target pixel.Vec
+	midPoint   pixel.Vec
+	target     pixel.Vec
 
 	counter float64
-	step float64
+	step    float64
 
 	color1 pixel.RGBA
 	color2 pixel.RGBA
@@ -89,21 +88,21 @@ type enemy struct {
 	imd *imdraw.IMDraw
 }
 
-func(e *enemy) init() {
+func (e *enemy) init() {
 	e.step = 1
 }
 
-func(e *enemy) update(dt float64, targetPos pixel.Vec) {
+func (e *enemy) update(dt float64, targetPos pixel.Vec) {
 	e.counter += dt
 
 	// If we reached the target assign a new one (updated character position)
 	if ((int(e.pos.X) >= int(e.target.X-2)) && (int(e.pos.X) <= int(e.target.X+2))) &&
-	((int(e.pos.Y) >= int(e.target.Y-2)) && (int(e.pos.Y) <= int(e.target.Y+2))) {
-		rand := rand2.Float64()	* 10
+		((int(e.pos.Y) >= int(e.target.Y-2)) && (int(e.pos.Y) <= int(e.target.Y+2))) {
+		rand := rand2.Float64() * 10
 
 		e.initialPos = e.pos
 		e.target = targetPos
-		e.midPoint = pixel.Vec{X: e.initialPos.X + (targetPos.X-e.initialPos.X)/2, Y: (e.initialPos.Y + (targetPos.Y-e.initialPos.Y)/2)+rand}
+		e.midPoint = pixel.Vec{X: e.initialPos.X + (targetPos.X-e.initialPos.X)/2, Y: (e.initialPos.Y + (targetPos.Y-e.initialPos.Y)/2) + rand}
 
 		e.counter = 0
 	}
@@ -115,7 +114,7 @@ func(e *enemy) update(dt float64, targetPos pixel.Vec) {
 	e.pos = pixel.Lerp(m1, m2, e.counter)
 }
 
-func(e *enemy) draw(t pixel.Target) {
+func (e *enemy) draw(t pixel.Target) {
 	e.imd.Clear()
 
 	e.imd.Color = e.color1

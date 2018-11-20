@@ -101,7 +101,7 @@ func run() {
 	var err error
 
 	win, err = pixelgl.NewWindow(pixelgl.WindowConfig{
-		Title:  "Platformer",
+		Title:  "Beat Phaser",
 		Bounds: pixel.R(0, 0, 1920, 1080),
 		VSync:  true,
 	})

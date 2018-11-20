@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/faiface/pixel"
+	"github.com/faiface/pixel/imdraw"
 	"github.com/faiface/pixel/pixelgl"
 	"github.com/faiface/pixel/text"
 	"golang.org/x/image/colornames"
@@ -21,19 +22,21 @@ var (
 	win    *pixelgl.Window
 	camPos pixel.Vec
 	bpm    float64 = 103
+
+	gameScore *score
 )
 
 type game struct {
-	score *score
-
 	world *world
+
+	collisionBoxes *imdraw.IMDraw
 }
 
 func (g *game) init() error {
 	g.world = &world{}
 	g.world.init()
 
-	g.score = &score{
+	gameScore = &score{
 		multiplier: 0,
 		pos:        pixel.V(0, 0),
 	}
@@ -48,13 +51,22 @@ func (g *game) update(dt float64) {
 	g.world.update(dt)
 }
 
+var drawCollisionBoxes = false
+
 func (g *game) draw(canvas *pixelgl.Canvas) {
 	// clear the canvas to black
 	canvas.Clear(colornames.Black)
 
-	// draw to imd
 	g.world.draw(canvas)
-	g.score.draw()
+	gameScore.draw()
+
+	if win.JustPressed(pixelgl.KeyC) {
+		drawCollisionBoxes = !drawCollisionBoxes
+	}
+
+	if drawCollisionBoxes {
+		g.drawCollisionBoxes(canvas)
+	}
 
 	win.Clear(colornames.White)
 	win.SetMatrix(pixel.IM.Scaled(pixel.ZV,
@@ -65,16 +77,45 @@ func (g *game) draw(canvas *pixelgl.Canvas) {
 	).Moved(win.Bounds().Center()))
 	canvas.Draw(win, pixel.IM.Moved(canvas.Bounds().Center()))
 
-	g.score.text.Draw(win, pixel.IM.Moved(canvas.Bounds().Min))
+	gameScore.text.Draw(win, pixel.IM.Moved(canvas.Bounds().Min))
+}
+
+func (g *game) collisions() {
+	for obj := range collidables {
+		if cs := collision(obj); len(cs) > 0 {
+			for _, c := range cs {
+				obj.HandleCollision(c)
+			}
+		}
+	}
+}
+
+func (g *game) drawCollisionBoxes(t pixel.Target) {
+	if g.collisionBoxes == nil {
+		g.collisionBoxes = imdraw.New(nil)
+	}
+
+	g.collisionBoxes.Clear()
+	g.collisionBoxes.Color = colornames.Lemonchiffon
+
+	for collidable, prevRect := range collidables {
+		rect := collidable.Rect().Norm().Union(prevRect.Norm())
+
+		g.collisionBoxes.Push(rect.Min, rect.Max)
+		g.collisionBoxes.Rectangle(1)
+	}
+
+	g.collisionBoxes.Draw(t)
 }
 
 func (g *game) run() {
 	g.init()
 
-	canvas := pixelgl.NewCanvas(pixel.R(-1920/2, -1080/2, 1920/2, 1080/2))
+	second := time.Tick(time.Second)
+
+	canvas := pixelgl.NewCanvas(pixel.R(-1920/3, -1080/3, 1920/3, 1080/3))
 	last := time.Now()
 	frames := 0
-	second := time.Tick(time.Second)
 
 	for !win.Closed() {
 		dt := time.Since(last).Seconds()
@@ -95,9 +136,12 @@ func (g *game) run() {
 			g.init()
 		}
 
+		g.collisions()
 		g.update(dt)
-		g.draw(canvas)
 
+		updatePositions()
+
+		g.draw(canvas)
 		win.Update()
 
 		frames++
@@ -117,7 +161,7 @@ type score struct {
 	text *text.Text
 }
 
-func (s *score) update(multiplier int) {
+func (s *score) setMultiplier(multiplier int) {
 	s.multiplier = multiplier
 }
 

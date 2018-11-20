@@ -3,34 +3,61 @@ package main
 import (
 	"image/color"
 	"math"
-	"time"
 
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/imdraw"
 	"github.com/faiface/pixel/pixelgl"
+	"golang.org/x/image/colornames"
 )
 
 type character struct {
-	body *body
-	hat  *hat
-	fire *fire
+	body   *body
+	hat    *hat
+	weapon *weapon
+}
 
-	lastClick             time.Time
-	increment, multiplier int
+func (c *character) HandleCollision(x Collidable) {
+	switch a := x.(type) {
+	case *laser:
+		c.die()
+	case *platform:
 
-	// sounds
-	pringlePhaser *soundEffect
+		r := x.Rect()
+
+		if int(c.body.rect.Center().Y) >= int(r.Max.Y) {
+			// above
+			c.body.rect = c.body.rect.Moved(pixel.V(0, a.rect.Max.Y-c.body.rect.Min.Y))
+			c.body.vel.Y = 0
+		} else if int(c.body.rect.Center().Y) <= int(r.Min.Y) {
+			// below
+			c.body.rect = c.body.rect.Moved(pixel.V(0, a.rect.Min.Y-c.body.rect.Max.Y-5)) // -5 - hat
+			c.body.vel.Y = 0
+		} else if int(c.body.rect.Center().X) <= int(r.Min.X) {
+			// left
+			c.body.rect = c.body.rect.Moved(pixel.V(a.rect.Min.X-c.body.rect.Max.X, 0))
+			c.body.vel.X = 0
+		} else {
+			// right
+			c.body.rect = c.body.rect.Moved(pixel.V(a.rect.Max.X-c.body.rect.Min.X, 0))
+			c.body.vel.X = 0
+		}
+	}
+}
+
+func (c *character) Rect() pixel.Rect {
+	r := c.body.rect
+	r.Max = r.Max.Add(pixel.V(0, 5)) // hat
+
+	return r
+}
+
+func (c *character) die() {
+	c.hat.color = colornames.Red
+	c.hat.altColor = colornames.Black
 }
 
 func (c *character) init() {
-	if c.pringlePhaser == nil {
-		c.pringlePhaser = &soundEffect{
-			filePath: "audio/effects/pringle-phaser.ogg",
-		}
-		c.pringlePhaser.load()
-	}
-
-	c.lastClick = time.Now()
+	defer registerCollidable(c)
 
 	c.body = &body{
 		// phys
@@ -46,59 +73,26 @@ func (c *character) init() {
 	c.hat = &hat{color: pixel.RGB(float64(255)/float64(255), 0, float64(250)/float64(255)), altColor: pixel.RGB(float64(32)/float64(255), float64(22)/float64(255), float64(249)/float64(156))}
 	c.hat.init()
 
-	c.fire = &fire{}
+	c.weapon = handgun
+	c.weapon.init()
 }
 
 func (c *character) update(dt float64) {
-	timeSinceClick := time.Since(c.lastClick).Seconds()
-
-	if win.JustPressed(pixelgl.MouseButtonLeft) {
-		c.lastClick = time.Now()
-
-		if timeSinceClick > 60/bpm+0.05 || timeSinceClick < 60/bpm-0.05 {
-			c.increment--
-
-			if c.increment <= 0 {
-				c.multiplier--
-				c.increment = 8
-			}
-
-			if c.multiplier < 0 {
-				c.multiplier = 0
-			}
-
-			c.fire.now(128, win.Bounds().Center().Add(c.body.rect.Center()), win.MousePosition().Add(camPos), color.White)
-		} else {
-			c.increment++
-
-			if c.increment >= 8 {
-				c.multiplier++
-				c.increment = 0
-			}
-
-			if c.multiplier > 8 {
-				c.multiplier = 8
-			}
-
-			c.fire.now(128, win.Bounds().Center().Add(c.body.rect.Center()), win.MousePosition().Add(camPos), randomNiceColor())
-		}
-
-		go c.pringlePhaser.play()
-	}
-
 	c.body.update(dt)
 	c.hat.update(dt, c.body.rect.Center())
+	c.weapon.update(dt, c.body.rect.Center(), c.body.vel)
 }
 
 func (c *character) draw(t pixel.Target) {
 	c.body.draw(t)
 	c.hat.draw(t)
+	c.weapon.draw(t)
 }
 
 type hat struct {
 	pos             pixel.Vec
 	counter         float64
-	color, altColor pixel.RGBA
+	color, altColor color.Color
 }
 
 func (h *hat) init() {
@@ -216,20 +210,6 @@ func (gp *body) update(dt float64) {
 	// apply gravity and velocity
 	gp.rect = gp.rect.Moved(gp.vel.Scaled(dt))
 
-	// @TODO collisions with stuff looks like this, turn platforms into walls
-	/*if gp.vel.Y <= 0 {
-		for _, p := range platforms {
-			if gp.rect.Max.X <= p.rect.Min.X || gp.rect.Min.X >= p.rect.Max.X {
-				continue
-			}
-			if gp.rect.Min.Y > p.rect.Max.Y || gp.rect.Min.Y < p.rect.Max.Y+gp.vel.Y*dt {
-				continue
-			}
-			gp.vel.Y = 0
-			gp.rect = gp.rect.Moved(pixel.V(0, p.rect.Max.Y-gp.rect.Min.Y))
-		}
-	}*/
-
 	gp.counter += dt
 
 	// determine the new animation state
@@ -250,7 +230,7 @@ func (gp *body) update(dt float64) {
 	// determine the correct animation frame
 	switch gp.state {
 	case idle:
-		i := int(math.Floor(gp.counter / gp.rate/2))
+		i := int(math.Floor(gp.counter / gp.rate / 2))
 		gp.frame = gp.anims["Front"][i%len(gp.anims["Front"])]
 	case running:
 		i := int(math.Floor(gp.counter / gp.rate))
@@ -301,46 +281,26 @@ func (gp *body) draw(t pixel.Target) {
 	gp.imd.Draw(t)
 }
 
-// @TODO perhaps 'weapon'?
-
-type laser struct {
-	rect  pixel.Rect
-	color color.Color
-
-	thickness float64
+func todegrees(rads float64) float64 {
+	return rads * (180 / math.Pi)
 }
 
-func (l *laser) draw(imd *imdraw.IMDraw) {
-	imd.Color = l.color
-	imd.EndShape = imdraw.RoundEndShape
+func angleBetweenVectors(v1, v2 pixel.Vec) float64 {
+	angle := math.Atan2(v2.Y, v2.X) - math.Atan2(v1.Y, v2.X)
 
-	imd.Push(pixel.V(l.rect.Min.X, l.rect.Min.Y), pixel.V(l.rect.Max.X, l.rect.Max.Y))
-	imd.Line(l.thickness)
-
-	if l.thickness > 0 {
-		l.thickness = l.thickness - 0.02
+	if angle < 0 {
+		angle += 2 * math.Pi
 	}
+
+	return angle
 }
 
-type fire struct {
-	speed  float64
-	origin pixel.Vec
-	vector pixel.Vec
+func getMouseAngleFromCenter() float64 {
+	a := angleBetweenVectors(pixel.V(0, 0), win.Bounds().Center().Sub(win.MousePosition()))
 
-	newLaser *laser
-}
-
-func (f *fire) now(speed float64, origin pixel.Vec, vector pixel.Vec, color color.Color) {
-	f.newLaser = &laser{
-		color: color,
-		// Minus half window size
-		rect:      pixel.R(origin.X-512, origin.Y-384, vector.X-512, vector.Y-384),
-		thickness: 2,
+	if win.MousePosition().X < win.Bounds().Center().X {
+		a -= math.Pi
 	}
-}
 
-func (f *fire) draw(imd *imdraw.IMDraw) {
-	if f.newLaser != nil {
-		f.newLaser.draw(imd)
-	}
+	return a
 }

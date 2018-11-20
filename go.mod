@@ -8,6 +8,7 @@ require (
 	github.com/go-gl/gl v0.0.0-20181026044259-55b76b7df9d2 // indirect
 	github.com/go-gl/glfw v0.0.0-20181014061658-691ee1b84c51 // indirect
 	github.com/go-gl/mathgl v0.0.0-20180804195959-cdf14b6b8f8a // indirect
+	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0 // indirect
 	github.com/hajimehoshi/go-mp3 v0.1.1 // indirect
 	github.com/hajimehoshi/oto v0.2.1 // indirect
 	github.com/jfreymuth/oggvorbis v1.0.0 // indirect
