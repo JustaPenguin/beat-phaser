@@ -193,9 +193,7 @@ func (l *laser) HandleCollision(x Collidable) {
 }
 
 func (l *laser) Rect() pixel.Rect {
-	v := l.pos.Sub(pixel.V(0.001, 0.001).Rotated(l.velocity.Angle()))
-
-	return pixel.R(v.X, v.Y, l.pos.X, l.pos.Y)
+	return pixel.R(l.pos.X - 1, l.pos.Y -1, l.pos.X, l.pos.Y)
 }
 
 func (l *laser) update(dt float64) {

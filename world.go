@@ -1,11 +1,12 @@
 package main
 
 import (
+	"image/color"
+	"math/rand"
+
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/imdraw"
 	"golang.org/x/image/colornames"
-	"image/color"
-	"math/rand"
 )
 
 type world struct {
@@ -64,7 +65,7 @@ func (w *world) draw(t pixel.Target) {
 	w.weather.Clear()
 
 	w.character.draw(t)
-	//w.rain.draw(w.weather)
+	w.rain.draw(w.weather)
 
 	for _, p := range w.platforms {
 		p.draw(w.mainScene)
