@@ -11,15 +11,15 @@ type Collidable interface {
 
 var collidables = make(map[Collidable]pixel.Rect)
 
-func DeregisterCollidable(c Collidable) {
+func deregisterCollidable(c Collidable) {
 	delete(collidables, c)
 }
 
-func RegisterCollidable(c Collidable) {
+func registerCollidable(c Collidable) {
 	collidables[c] = c.Rect()
 }
 
-func Collision(c Collidable) []Collidable {
+func collision(c Collidable) []Collidable {
 	var cs []Collidable
 
 	for x, r := range collidables {

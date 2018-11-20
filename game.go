@@ -82,7 +82,7 @@ func (g *game) draw(canvas *pixelgl.Canvas) {
 
 func (g *game) collisions() {
 	for obj := range collidables {
-		if cs := Collision(obj); len(cs) > 0 {
+		if cs := collision(obj); len(cs) > 0 {
 			for _, c := range cs {
 				obj.HandleCollision(c)
 			}

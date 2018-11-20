@@ -41,7 +41,7 @@ func (w *world) init() {
 	}
 	for i := range w.platforms {
 		w.platforms[i].color = randomNiceColor()
-		RegisterCollidable(w.platforms[i])
+		registerCollidable(w.platforms[i])
 	}
 
 	var rainDrops []pixel.Vec

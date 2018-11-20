@@ -57,7 +57,7 @@ func (c *character) die() {
 }
 
 func (c *character) init() {
-	defer RegisterCollidable(c)
+	defer registerCollidable(c)
 
 	c.body = &body{
 		// phys

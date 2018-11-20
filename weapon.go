@@ -167,11 +167,11 @@ type laser struct {
 }
 
 func (l *laser) init() {
-	RegisterCollidable(l)
+	registerCollidable(l)
 }
 
 func (l *laser) destroy() {
-	DeregisterCollidable(l)
+	deregisterCollidable(l)
 }
 
 func (l *laser) HandleCollision(x Collidable) {
