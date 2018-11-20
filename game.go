@@ -111,9 +111,9 @@ func (g *game) drawCollisionBoxes(t pixel.Target) {
 func (g *game) run() {
 	g.init()
 
-	canvas := pixelgl.NewCanvas(pixel.R(-1920/8, -1080/8, 1920/8, 1080/8))
 	second := time.Tick(time.Second)
 
+	canvas := pixelgl.NewCanvas(pixel.R(-1920/3, -1080/3, 1920/3, 1080/3))
 	last := time.Now()
 	frames := 0
 

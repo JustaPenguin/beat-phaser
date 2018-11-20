@@ -1,8 +1,10 @@
 package main
 
 import (
+	"image"
 	"image/color"
 	"math/rand"
+	"os"
 
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/imdraw"
@@ -11,9 +13,11 @@ import (
 
 type world struct {
 	character *character
+	enemies   *enemiesCollection
 
 	platforms []*platform
 	rain      *rain
+	rooms     []*room
 
 	weather   *imdraw.IMDraw
 	mainScene *imdraw.IMDraw
@@ -21,12 +25,19 @@ type world struct {
 
 func (w *world) init() {
 	w.character = &character{}
+	w.enemies = &enemiesCollection{}
 	w.character.init()
 	w.mainScene = imdraw.New(nil)
 	w.weather = imdraw.New(nil)
 
+	w.rooms = append(w.rooms, &room{path: "images/world/rooms/room2.png"})
+
+	for _, room := range w.rooms {
+		room.init(room.path)
+	}
+
 	w.platforms = []*platform{
-		{rect: pixel.R(-26, -50, -25, 50)},
+		{rect: pixel.R(-50, -34, 50, -32)},
 		{rect: pixel.R(20, 0, 70, 2)},
 		{rect: pixel.R(-100, 10, -50, 12)},
 		{rect: pixel.R(120, -22, 140, -20)},
@@ -58,13 +69,19 @@ func (w *world) init() {
 func (w *world) update(dt float64) {
 	w.rain.update(w.character.body.rect.Center().Y-win.Bounds().Max.Y/2, w.character.body.rect.Center().Y+win.Bounds().Max.Y/2)
 	w.character.update(dt)
+	w.enemies.update(dt, w.character.body.rect.Center())
 }
 
 func (w *world) draw(t pixel.Target) {
 	w.mainScene.Clear()
 	w.weather.Clear()
 
+	for _, room := range w.rooms {
+		room.drawnRoom.Draw(t)
+	}
+
 	w.character.draw(t)
+	w.enemies.draw(t)
 	w.rain.draw(w.weather)
 
 	for _, p := range w.platforms {
@@ -121,4 +138,45 @@ func (p *platform) draw(imd *imdraw.IMDraw) {
 	imd.Color = p.color
 	imd.Push(p.rect.Min, p.rect.Max)
 	imd.Rectangle(0)
+}
+
+type room struct {
+	path      string
+	drawnRoom *imdraw.IMDraw
+
+	img    pixel.Picture
+	imd    *imdraw.IMDraw
+	sprite *pixel.Sprite
+}
+
+func (r *room) init(path string) {
+	var err error
+
+	r.img, err = loadPicture(path)
+	if err != nil {
+		panic(err)
+	}
+
+	r.sprite = pixel.NewSprite(r.img, r.img.Bounds())
+
+	r.drawnRoom = imdraw.New(r.img)
+	r.draw(r.drawnRoom)
+}
+
+func (r *room) draw(t pixel.Target) {
+	//r.sprite.Draw(t, pixel.IM.Scaled(r.sprite.Frame().Center(), 2.5))
+	r.sprite.Draw(t, pixel.IM)
+}
+
+func loadPicture(path string) (pixel.Picture, error) {
+	file, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+	img, _, err := image.Decode(file)
+	if err != nil {
+		return nil, err
+	}
+	return pixel.PictureDataFromImage(img), nil
 }

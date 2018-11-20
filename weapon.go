@@ -193,7 +193,7 @@ func (l *laser) HandleCollision(x Collidable) {
 }
 
 func (l *laser) Rect() pixel.Rect {
-	return pixel.R(l.pos.X - 1, l.pos.Y -1, l.pos.X, l.pos.Y)
+	return pixel.R(l.pos.X-1, l.pos.Y-1, l.pos.X, l.pos.Y)
 }
 
 func (l *laser) update(dt float64) {
