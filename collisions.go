@@ -7,7 +7,6 @@ import (
 type Collidable interface {
 	Rect() pixel.Rect
 	HandleCollision(Collidable)
-//	Dirty() bool
 }
 
 var collidables = make(map[Collidable]pixel.Rect)
@@ -21,14 +20,10 @@ func RegisterCollidable(c Collidable) {
 }
 
 func Collision(c Collidable) []Collidable {
-//	if !c.Dirty() {
-//		return nil
-//	}
-
 	var cs []Collidable
 
 	for x, r := range collidables {
-		if x == c/* || !x.Dirty() */{
+		if x == c {
 			continue
 		}
 
@@ -49,4 +44,3 @@ func updatePositions() {
 func didCollide(a pixel.Rect, b pixel.Rect) bool {
 	return a.Norm().Intersect(b.Norm()).Area() != 0
 }
-

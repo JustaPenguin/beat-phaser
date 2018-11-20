@@ -3,7 +3,6 @@ package main
 import (
 	"image/color"
 	"math"
-	"time"
 
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/imdraw"
@@ -29,12 +28,10 @@ func (c *character) HandleCollision(x Collidable) {
 			// above
 			c.body.rect = c.body.rect.Moved(pixel.V(0, a.rect.Max.Y-c.body.rect.Min.Y))
 			c.body.vel.Y = 0
-
 		} else if int(c.body.rect.Center().Y) <= int(r.Min.Y) {
 			// below
 			c.body.rect = c.body.rect.Moved(pixel.V(0, a.rect.Min.Y-c.body.rect.Max.Y))
 			c.body.vel.Y = 0
-
 		} else if int(c.body.rect.Center().X) <= int(r.Min.X) {
 			// left
 			c.body.rect = c.body.rect.Moved(pixel.V(a.rect.Min.X-c.body.rect.Max.X, 0))
@@ -44,7 +41,6 @@ func (c *character) HandleCollision(x Collidable) {
 			c.body.rect = c.body.rect.Moved(pixel.V(a.rect.Max.X-c.body.rect.Min.X, 0))
 			c.body.vel.X = 0
 		}
-
 	}
 }
 
@@ -74,18 +70,7 @@ func (c *character) init() {
 	c.hat = &hat{color: pixel.RGB(float64(255)/float64(255), 0, float64(250)/float64(255)), altColor: pixel.RGB(float64(32)/float64(255), float64(22)/float64(255), float64(249)/float64(156))}
 	c.hat.init()
 
-	c.weapon = &weapon{
-		speed: 100,
-		points: []pixel.Vec{
-			pixel.V(0, 0),
-			pixel.V(1, 0),
-			pixel.V(2, 0),
-			pixel.V(2, 2),
-			pixel.V(3, 2),
-			pixel.V(4, 2),
-			pixel.V(5, 2),
-		},
-	}
+	c.weapon = handgun
 	c.weapon.init()
 }
 
@@ -220,20 +205,6 @@ func (gp *body) update(dt float64) {
 	// apply gravity and velocity
 	gp.rect = gp.rect.Moved(gp.vel.Scaled(dt))
 
-	// @TODO collisions with stuff looks like this, turn platforms into walls
-	/*if gp.vel.Y <= 0 {
-		for _, p := range platforms {
-			if gp.rect.Max.X <= p.rect.Min.X || gp.rect.Min.X >= p.rect.Max.X {
-				continue
-			}
-			if gp.rect.Min.Y > p.rect.Max.Y || gp.rect.Min.Y < p.rect.Max.Y+gp.vel.Y*dt {
-				continue
-			}
-			gp.vel.Y = 0
-			gp.rect = gp.rect.Moved(pixel.V(0, p.rect.Max.Y-gp.rect.Min.Y))
-		}
-	}*/
-
 	gp.counter += dt
 
 	// determine the new animation state
@@ -301,129 +272,6 @@ func (gp *body) draw(t pixel.Target) {
 	x.Draw(t)
 }
 
-type laser struct {
-	color    color.Color
-	velocity pixel.Vec
-
-	pos, prevPos pixel.Vec
-
-	thickness     float64
-	numCollisions int
-}
-
-func (l *laser) init() {
-	RegisterCollidable(l)
-}
-
-func (l *laser) destroy() {
-	DeregisterCollidable(l)
-}
-
-func (l *laser) HandleCollision(x Collidable) {
-	switch x.(type) {
-	case *laser, *character:
-		return
-	}
-
-	r := x.Rect()
-
-	if int(l.prevPos.Y) <= int(r.Min.Y) || int(l.prevPos.Y) >= int(r.Max.Y) {
-		l.velocity.Y = -l.velocity.Y
-	} else {
-		l.velocity.X = -l.velocity.X
-	}
-
-	l.color = colornames.Hotpink
-	l.numCollisions++
-}
-
-func (l *laser) Rect() pixel.Rect {
-	return pixel.R(l.pos.X-1, l.pos.Y-1, l.pos.X, l.pos.Y)
-}
-
-func (l *laser) update(dt float64) {
-	l.prevPos = l.pos
-	// move the position or expire the laser
-	l.pos = l.pos.Add(l.velocity.Scaled(dt))
-
-	if l.thickness > 0 {
-		l.thickness = l.thickness - 0.02
-	}
-}
-
-func (l *laser) draw(imd *imdraw.IMDraw) {
-	imd.Color = l.color
-	imd.EndShape = imdraw.RoundEndShape
-
-	imd.Push(l.pos)
-	imd.Polygon(l.thickness)
-}
-
-type weapon struct {
-	lasers []*laser
-	speed  float64
-	points []pixel.Vec
-
-	matrix    pixel.Matrix
-	parentPos pixel.Vec
-
-	lastClick time.Time
-	imdraw    *imdraw.IMDraw
-
-	increment, multiplier int
-
-	// sounds
-	pringlePhaser *soundEffect
-}
-
-func (w *weapon) init() {
-	w.lastClick = time.Now()
-
-	if w.imdraw == nil {
-		w.imdraw = imdraw.New(nil)
-	}
-
-	if w.pringlePhaser == nil {
-		w.pringlePhaser = &soundEffect{
-			filePath: "audio/effects/pringle-phaser.ogg",
-		}
-		w.pringlePhaser.load()
-	}
-}
-
-func (w *weapon) fire(origin pixel.Vec, angle float64, color color.Color) {
-	l := &laser{
-		color:    color,
-		velocity: pixel.V(w.speed, 0).Rotated(angle),
-		pos:      origin,
-		// Minus half window size
-		thickness: 2,
-	}
-	l.init()
-
-	w.lasers = append(w.lasers, l)
-}
-
-func (w *weapon) draw(t pixel.Target) {
-	w.imdraw.Clear()
-	w.imdraw.SetMatrix(w.matrix)
-
-	w.imdraw.Color = colornames.Blueviolet
-
-	for _, pt := range w.points {
-		w.imdraw.Push(pt.Add(w.parentPos))
-	}
-
-	w.imdraw.Polygon(1)
-	w.imdraw.SetMatrix(pixel.IM)
-
-	for _, laser := range w.lasers {
-		laser.draw(w.imdraw)
-	}
-
-	w.imdraw.Draw(t)
-}
-
 func todegrees(rads float64) float64 {
 	return rads * (180 / math.Pi)
 }
@@ -446,72 +294,4 @@ func getMouseAngleFromCenter() float64 {
 	}
 
 	return a
-}
-
-func (w *weapon) update(dt float64, characterPos pixel.Vec, parentVelocity pixel.Vec) {
-	timeSinceClick := time.Since(w.lastClick).Seconds()
-
-	w.parentPos = characterPos.Add(pixel.V(5, 0))
-	w.matrix = pixel.IM.Rotated(w.points[0].Add(characterPos), getMouseAngleFromCenter())
-
-	if parentVelocity.X < 0 && win.MousePosition().X < win.Bounds().Center().X {
-		w.matrix = w.matrix.Scaled(characterPos, -1).Moved(pixel.V(-10, 0))
-	}
-
-	if win.JustPressed(pixelgl.MouseButtonLeft) {
-		w.lastClick = time.Now()
-
-		a := getMouseAngleFromCenter()
-
-		var c color.Color
-
-		if timeSinceClick > 60/bpm+0.05 || timeSinceClick < 60/bpm-0.05 {
-			w.increment--
-
-			if w.increment <= 0 {
-				w.multiplier--
-				w.increment = 8
-			}
-
-			if w.multiplier < 0 {
-				w.multiplier = 0
-			}
-
-			c = color.White
-		} else {
-			w.increment++
-
-			if w.increment >= 8 {
-				w.multiplier++
-				w.increment = 0
-			}
-
-			if w.multiplier > 8 {
-				w.multiplier = 8
-			}
-
-			c = randomNiceColor()
-		}
-
-		w.fire(w.matrix.Project(characterPos.Add(w.points[len(w.points)-1])), a, c)
-
-		gameScore.setMultiplier(w.multiplier)
-
-		go w.pringlePhaser.play()
-	}
-
-	var toRemove []int
-
-	for i, laser := range w.lasers {
-		laser.update(dt)
-
-		if laser.numCollisions > 3 || laser.thickness <= 0 {
-			toRemove = append(toRemove, i)
-		}
-	}
-
-	for _, i := range toRemove {
-		w.lasers[i].destroy()
-		w.lasers = append(w.lasers[:i], w.lasers[i+1:]...)
-	}
 }
