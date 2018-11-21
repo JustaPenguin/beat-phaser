@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"golang.org/x/image/colornames"
 	"image"
 	"image/color"
 	"math/rand"
@@ -10,6 +9,7 @@ import (
 
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/imdraw"
+	"golang.org/x/image/colornames"
 )
 
 type world struct {
@@ -44,8 +44,8 @@ func (w *world) init() {
 			// room divisors - top rooms
 			{rect: pixel.R(-10, 685, -5, 540).Moved(wallMidpointPositionVec)},    // hat room right wall
 			{rect: pixel.R(-230, 690, -165, 540).Moved(wallMidpointPositionVec)}, // outside/inside horizontal boundary (top)
-			{rect: pixel.R(-230, 350, -165, 200).Moved(wallMidpointPositionVec)}, // outside/inside horizontal boundary (bottom)
-			{rect: pixel.R(-10, 350, -5, 200).Moved(wallMidpointPositionVec)},    // hat room right wall (bottom of gap)
+			{rect: pixel.R(-230, 310, -165, 200).Moved(wallMidpointPositionVec)}, // outside/inside horizontal boundary (bottom)
+			{rect: pixel.R(-10, 310, -5, 200).Moved(wallMidpointPositionVec)},    // hat room right wall (bottom of gap)
 
 			// room divisors - bottom rooms
 			{rect: pixel.R(-700, 190, 0, 200).Moved(wallMidpointPositionVec)},   // horizontal room boundary to first door
@@ -198,6 +198,7 @@ func (w *wall) update(dt float64) {
 }
 
 func (w *wall) draw(imd *imdraw.IMDraw) {
+	return
 	imd.Color = w.color
 	imd.Push(w.rect.Min, w.rect.Max)
 	imd.Rectangle(10)
