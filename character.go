@@ -7,53 +7,57 @@ import (
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/imdraw"
 	"github.com/faiface/pixel/pixelgl"
-	"golang.org/x/image/colornames"
 )
 
 type character struct {
 	body   *body
-	hat    *hat
 	weapon *weapon
 }
 
-func (c *character) HandleCollision(x Collidable) {
-	switch a := x.(type) {
+func (c *character) Vel() pixel.Vec {
+	return c.body.vel
+}
+
+func (c *character) HandleCollision(x Collidable, collisionTime float64, normal pixel.Vec) {
+	switch x.(type) {
 	case *laser:
 		c.die()
-	case *platform:
+	case *wall:
 
-		r := x.Rect()
+		r := x.Rect().Norm()
 
-		if int(c.body.rect.Center().Y) >= int(r.Max.Y) {
-			// above
-			c.body.rect = c.body.rect.Moved(pixel.V(0, a.rect.Max.Y-c.body.rect.Min.Y))
-			c.body.vel.Y = 0
-		} else if int(c.body.rect.Center().Y) <= int(r.Min.Y) {
-			// below
-			c.body.rect = c.body.rect.Moved(pixel.V(0, a.rect.Min.Y-c.body.rect.Max.Y-5)) // -5 - hat
-			c.body.vel.Y = 0
-		} else if int(c.body.rect.Center().X) <= int(r.Min.X) {
-			// left
-			c.body.rect = c.body.rect.Moved(pixel.V(a.rect.Min.X-c.body.rect.Max.X, 0))
+		if normal == pixel.V(-1, 0) {
+			println("left")
+			c.body.rect = c.body.rect.Moved(pixel.V(r.Min.X-c.body.rect.Max.X, 0))
 			c.body.vel.X = 0
-		} else {
+		} else if normal == pixel.V(1, 0) {
+			println("right")
 			// right
-			c.body.rect = c.body.rect.Moved(pixel.V(a.rect.Max.X-c.body.rect.Min.X, 0))
+			c.body.rect = c.body.rect.Moved(pixel.V(r.Max.X-c.body.rect.Min.X, 0))
 			c.body.vel.X = 0
+		} else if normal == pixel.V(0, 1) {
+			println("above")
+			// above
+			c.body.rect = c.body.rect.Moved(pixel.V(0, r.Max.Y-c.body.rect.Min.Y))
+			c.body.vel.Y = 0
+		} else if normal == pixel.V(0, -1) {
+			println("below")
+			c.body.rect = c.body.rect.Moved(pixel.V(0, r.Min.Y-c.body.rect.Max.Y))
+			c.body.vel.Y = 0
+		} else {
+			println("idk")
 		}
+
+
 	}
 }
 
 func (c *character) Rect() pixel.Rect {
-	r := c.body.rect
-	r.Max = r.Max.Add(pixel.V(0, 5)) // hat
-
-	return r
+	return c.body.rect
 }
 
 func (c *character) die() {
-	c.hat.color = colornames.Red
-	c.hat.altColor = colornames.Black
+
 }
 
 func (c *character) init() {
@@ -62,7 +66,7 @@ func (c *character) init() {
 	c.body = &body{
 		// phys
 		gravity:   -512,
-		runSpeed:  128,
+		runSpeed:  3,
 		jumpSpeed: 192,
 		rect:      pixel.R(-62, -74, 62, 74),
 		rate:      1.0 / 10,
@@ -70,22 +74,17 @@ func (c *character) init() {
 	}
 	c.body.init()
 
-	c.hat = &hat{color: pixel.RGB(float64(255)/float64(255), 0, float64(250)/float64(255)), altColor: pixel.RGB(float64(32)/float64(255), float64(22)/float64(255), float64(249)/float64(156))}
-	c.hat.init()
-
 	c.weapon = handgun
 	c.weapon.init()
 }
 
 func (c *character) update(dt float64) {
 	c.body.update(dt)
-	c.hat.update(dt, c.body.rect.Center())
 	c.weapon.update(dt, c.body.rect.Center(), c.body.vel)
 }
 
 func (c *character) draw(t pixel.Target) {
 	c.body.draw(t)
-	c.hat.draw(t)
 	c.weapon.draw(t)
 }
 
@@ -208,7 +207,7 @@ func (gp *body) update(dt float64) {
 	}
 
 	// apply gravity and velocity
-	gp.rect = gp.rect.Moved(gp.vel.Scaled(dt))
+	gp.rect = gp.rect.Moved(gp.vel)
 
 	gp.counter += dt
 

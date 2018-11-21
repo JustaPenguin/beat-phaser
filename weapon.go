@@ -174,7 +174,7 @@ func (l *laser) destroy() {
 	deregisterCollidable(l)
 }
 
-func (l *laser) HandleCollision(x Collidable) {
+func (l *laser) HandleCollision(x Collidable, collisionTime float64, normal pixel.Vec) {
 	switch x.(type) {
 	case *laser, *character:
 		return
@@ -190,6 +190,10 @@ func (l *laser) HandleCollision(x Collidable) {
 
 	l.color = colornames.Hotpink
 	l.numCollisions++
+}
+
+func (l *laser) Vel() pixel.Vec {
+	return l.velocity
 }
 
 func (l *laser) Rect() pixel.Rect {

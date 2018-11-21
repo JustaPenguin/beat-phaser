@@ -81,12 +81,8 @@ func (g *game) draw(canvas *pixelgl.Canvas) {
 }
 
 func (g *game) collisions() {
-	for obj := range collidables {
-		if cs := collision(obj); len(cs) > 0 {
-			for _, c := range cs {
-				obj.HandleCollision(c)
-			}
-		}
+	for c := range collidables {
+		checkCollisions(c)
 	}
 }
 
@@ -98,8 +94,8 @@ func (g *game) drawCollisionBoxes(t pixel.Target) {
 	g.collisionBoxes.Clear()
 	g.collisionBoxes.Color = colornames.Lemonchiffon
 
-	for collidable, prevRect := range collidables {
-		rect := collidable.Rect().Norm().Union(prevRect.Norm())
+	for collidable := range collidables {
+		rect := collidable.Rect()
 
 		g.collisionBoxes.Push(rect.Min, rect.Max)
 		g.collisionBoxes.Rectangle(1)
@@ -139,7 +135,6 @@ func (g *game) run() {
 		g.collisions()
 		g.update(dt)
 
-		updatePositions()
 
 		g.draw(canvas)
 		win.Update()
