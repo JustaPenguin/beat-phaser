@@ -16,8 +16,8 @@ type world struct {
 	character *character
 	enemies   *enemiesCollection
 
-	rain      *rain
-	rooms     []*room
+	rain  *rain
+	rooms []*room
 
 	weather   *imdraw.IMDraw
 	mainScene *imdraw.IMDraw
@@ -36,22 +36,21 @@ func (w *world) init() {
 		path: "images/world/rooms/room2.png",
 		walls: []*wall{
 			// outside bounds
-			{rect: pixel.R(-700, -200, 700, -190)}, // bottom outermost wall
-			{rect: pixel.R(-710, 700, -700, -200)}, // left outermost wall
-			{rect: pixel.R(700, 700, 710, -200)}, // right outermost wall
+			{rect: pixel.R(-700, -200, 700, -190)},                              // bottom outermost wall
+			{rect: pixel.R(-710, 700, -700, -200)},                              // left outermost wall
+			{rect: pixel.R(700, 700, 710, -200)},                                // right outermost wall
 			{rect: pixel.R(-700, 690, 700, 700).Moved(wallMidpointPositionVec)}, // top outermost wall
 
 			// room divisors - top rooms
-			{rect: pixel.R(-10, 685, -5, 540).Moved(wallMidpointPositionVec)}, // hat room right wall
+			{rect: pixel.R(-10, 685, -5, 540).Moved(wallMidpointPositionVec)},    // hat room right wall
 			{rect: pixel.R(-230, 690, -165, 540).Moved(wallMidpointPositionVec)}, // outside/inside horizontal boundary (top)
 			{rect: pixel.R(-230, 350, -165, 200).Moved(wallMidpointPositionVec)}, // outside/inside horizontal boundary (bottom)
-			{rect: pixel.R(-10, 350, -5, 200).Moved(wallMidpointPositionVec)}, // hat room right wall (bottom of gap)
-
+			{rect: pixel.R(-10, 350, -5, 200).Moved(wallMidpointPositionVec)},    // hat room right wall (bottom of gap)
 
 			// room divisors - bottom rooms
-			{rect: pixel.R(-700, 190, 0, 200).Moved(wallMidpointPositionVec)}, // horizontal room boundary to first door
-			{rect: pixel.R(140, 190, 315, 200).Moved(wallMidpointPositionVec)}, // horizontal room boundary between doors
-			{rect: pixel.R(455, 190, 700, 200).Moved(wallMidpointPositionVec)}, // horizontal room boundary to outer wall
+			{rect: pixel.R(-700, 190, 0, 200).Moved(wallMidpointPositionVec)},   // horizontal room boundary to first door
+			{rect: pixel.R(140, 190, 315, 200).Moved(wallMidpointPositionVec)},  // horizontal room boundary between doors
+			{rect: pixel.R(455, 190, 700, 200).Moved(wallMidpointPositionVec)},  // horizontal room boundary to outer wall
 			{rect: pixel.R(150, 190, 160, -140).Moved(wallMidpointPositionVec)}, // vertical boundary between bottom two rooms
 		},
 	})
@@ -131,7 +130,7 @@ func (r *rain) draw(imd *imdraw.IMDraw) {
 type room struct {
 	path      string
 	drawnRoom *imdraw.IMDraw
-	walls []*wall
+	walls     []*wall
 
 	img    pixel.Picture
 	imd    *imdraw.IMDraw
@@ -184,9 +183,8 @@ func loadPicture(path string) (pixel.Picture, error) {
 	return pixel.PictureDataFromImage(img), nil
 }
 
-
 type wall struct {
-	rect pixel.Rect
+	rect  pixel.Rect
 	color color.Color
 }
 
@@ -218,4 +216,3 @@ func (w *wall) HandleCollision(c Collidable, collisionTime float64, normal pixel
 
 	w.color = colornames.Red
 }
-

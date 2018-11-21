@@ -92,12 +92,18 @@ func (g *game) drawCollisionBoxes(t pixel.Target) {
 	}
 
 	g.collisionBoxes.Clear()
-	g.collisionBoxes.Color = colornames.Lemonchiffon
 
 	for collidable := range collidables {
+		g.collisionBoxes.Color = colornames.Lemonchiffon
 		rect := collidable.Rect()
 
 		g.collisionBoxes.Push(rect.Min, rect.Max)
+		g.collisionBoxes.Rectangle(1)
+
+		rect2 := sweptBroadphaseRect(collidable)
+
+		g.collisionBoxes.Color = colornames.Indigo
+		g.collisionBoxes.Push(rect2.Min, rect2.Max)
 		g.collisionBoxes.Rectangle(1)
 	}
 
@@ -134,7 +140,6 @@ func (g *game) run() {
 
 		g.collisions()
 		g.update(dt)
-
 
 		g.draw(canvas)
 		win.Update()

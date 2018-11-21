@@ -44,25 +44,27 @@ func aabbCheck(b1, b2 pixel.Rect) bool {
 	b1 = b1.Norm()
 	b2 = b2.Norm()
 
-	return !(b1.Min.X + b1.W() < b2.Min.X || b1.Min.X > b2.Min.X + b2.W() || b1.Min.Y + b1.H() < b2.Min.Y || b1.Min.Y > b2.Min.Y + b2.H())
+	return !(b1.Min.X+b1.W() < b2.Min.X || b1.Min.X > b2.Min.X+b2.W() || b1.Min.Y+b1.H() < b2.Min.Y || b1.Min.Y > b2.Min.Y+b2.H())
 }
 
 func sweptBroadphaseRect(b Collidable) pixel.Rect {
-	r := b.Rect()
-
+	r := pixel.Rect{}
+	bRect := b.Rect().Norm()
 
 	if b.Vel().X > 0 {
-		r.Max.X += b.Vel().X
+		r.Min.X = bRect.Min.X
+		r.Max.X = bRect.Max.X + b.Vel().X
 	} else {
-		r.Min.X += b.Vel().X
-		r.Max.X -= b.Vel().X
+		r.Min.X = bRect.Min.X + b.Vel().X
+		r.Max.X = bRect.Max.X - b.Vel().X
 	}
 
-	if b.Vel().Y < 0 {
-		r.Max.X += b.Vel().Y
+	if b.Vel().Y > 0 {
+		r.Min.Y = bRect.Min.Y
+		r.Max.Y = bRect.Max.Y + b.Vel().Y
 	} else {
-		r.Min.Y += b.Vel().Y
-		r.Max.Y -= b.Vel().Y
+		r.Min.Y = bRect.Min.Y + b.Vel().Y
+		r.Max.Y = bRect.Max.Y - b.Vel().Y
 	}
 
 	return r
@@ -112,8 +114,6 @@ func sweptAABB(b1, b2 Collidable) (normal pixel.Vec, collision float64) {
 	entryTime := math.Max(entry.X, entry.Y)
 	exitTime := math.Min(exit.X, exit.Y)
 
-
-
 	// no collision
 	if entryTime > exitTime || entry.X < 0 && entry.Y < 0 || entry.X > 1 || entry.Y > 1 {
 		return pixel.ZV, 1.0
@@ -138,7 +138,6 @@ func sweptAABB(b1, b2 Collidable) (normal pixel.Vec, collision float64) {
 				normal.Y = -1
 			}
 		}
-
 
 		return normal, entryTime
 	}

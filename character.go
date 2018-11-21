@@ -23,32 +23,14 @@ func (c *character) HandleCollision(x Collidable, collisionTime float64, normal 
 	case *laser:
 		c.die()
 	case *wall:
-
-		r := x.Rect().Norm()
-
-		if normal == pixel.V(-1, 0) {
-			println("left")
-			c.body.rect = c.body.rect.Moved(pixel.V(r.Min.X-c.body.rect.Max.X, 0))
-			c.body.vel.X = 0
-		} else if normal == pixel.V(1, 0) {
-			println("right")
-			// right
-			c.body.rect = c.body.rect.Moved(pixel.V(r.Max.X-c.body.rect.Min.X, 0))
-			c.body.vel.X = 0
-		} else if normal == pixel.V(0, 1) {
-			println("above")
-			// above
-			c.body.rect = c.body.rect.Moved(pixel.V(0, r.Max.Y-c.body.rect.Min.Y))
-			c.body.vel.Y = 0
-		} else if normal == pixel.V(0, -1) {
-			println("below")
-			c.body.rect = c.body.rect.Moved(pixel.V(0, r.Min.Y-c.body.rect.Max.Y))
-			c.body.vel.Y = 0
+		// @TODO collisionTime will be useful in making these more accurate at large velocities
+		if normal.Y == 0 {
+			// collision in X. move back by c.body.vel (with a negated x)
+			c.body.rect = c.body.rect.Moved(c.body.vel.ScaledXY(pixel.V(-1, 0)))
 		} else {
-			println("idk")
+			// collision in Y. move back by c.body.vel (with a negated y)
+			c.body.rect = c.body.rect.Moved(c.body.vel.ScaledXY(pixel.V(0, -1)))
 		}
-
-
 	}
 }
 
