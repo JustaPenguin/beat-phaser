@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"image"
 	"image/color"
 	"math/rand"
@@ -9,7 +8,6 @@ import (
 
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/imdraw"
-	"golang.org/x/image/colornames"
 )
 
 type world struct {
@@ -81,12 +79,6 @@ func (w *world) draw(t pixel.Target) {
 	w.weather.Clear()
 
 	for _, room := range w.rooms {
-
-		// @TODO REMOVE
-		for _, wall := range room.walls {
-			wall.draw(room.drawnRoom)
-		}
-
 		room.drawnRoom.Draw(t)
 	}
 
@@ -184,13 +176,11 @@ func loadPicture(path string) (pixel.Picture, error) {
 }
 
 type wall struct {
-	rect  pixel.Rect
-	color color.Color
+	rect pixel.Rect
 }
 
 func (w *wall) init() {
 	registerCollidable(w)
-	w.color = colornames.Blueviolet
 }
 
 func (w *wall) update(dt float64) {
@@ -198,10 +188,7 @@ func (w *wall) update(dt float64) {
 }
 
 func (w *wall) draw(imd *imdraw.IMDraw) {
-	return
-	imd.Color = w.color
-	imd.Push(w.rect.Min, w.rect.Max)
-	imd.Rectangle(10)
+
 }
 
 func (w *wall) Rect() pixel.Rect {
@@ -209,11 +196,9 @@ func (w *wall) Rect() pixel.Rect {
 }
 
 func (w *wall) Vel() pixel.Vec {
-	return pixel.ZV
+	return pixel.ZV // walls don't move, dummy
 }
 
 func (w *wall) HandleCollision(c Collidable, collisionTime float64, normal pixel.Vec) {
-	fmt.Printf("wall collided with (%T)\n", c)
 
-	w.color = colornames.Red
 }

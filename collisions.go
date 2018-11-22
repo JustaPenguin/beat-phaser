@@ -1,9 +1,9 @@
 package main
 
 import (
-	"fmt"
-	"github.com/faiface/pixel"
 	"math"
+
+	"github.com/faiface/pixel"
 )
 
 type Collidable interface {
@@ -12,14 +12,14 @@ type Collidable interface {
 	HandleCollision(obj Collidable, collisionTime float64, normal pixel.Vec)
 }
 
-var collidables = make(map[Collidable]pixel.Rect)
+var collidables = make(map[Collidable]bool)
 
 func deregisterCollidable(c Collidable) {
 	delete(collidables, c)
 }
 
 func registerCollidable(c Collidable) {
-	collidables[c] = c.Rect()
+	collidables[c] = true
 }
 
 func checkCollisions(c Collidable) {
@@ -27,26 +27,26 @@ func checkCollisions(c Collidable) {
 		bpb := sweptBroadphaseRect(c)
 
 		if aabbCheck(bpb, x.Rect()) {
-			normal, collision := sweptAABB(c, x)
+			collisionTime, normal := sweptAABB(c, x)
 
-			//fmt.Printf("(%T) -> (%T) SWEEP\n", x, c)
-
-			if collision < 1 {
-				fmt.Printf("(%T) -> (%T) collision at %s\n", x, c, normal)
-				x.HandleCollision(c, collision, normal)
-				c.HandleCollision(x, collision, normal)
+			if collisionTime < 1 {
+				x.HandleCollision(c, collisionTime, normal)
+				c.HandleCollision(x, collisionTime, normal)
 			}
 		}
 	}
 }
 
+// aabbCheck is a simple collision test for two axis aligned bounding boxes. it may report false positives.
 func aabbCheck(b1, b2 pixel.Rect) bool {
 	b1 = b1.Norm()
 	b2 = b2.Norm()
 
-	return !(b1.Min.X+b1.W() < b2.Min.X || b1.Min.X > b2.Min.X+b2.W() || b1.Min.Y+b1.H() < b2.Min.Y || b1.Min.Y > b2.Min.Y+b2.H())
+	return b1.Intersect(b2).Area() > 0
 }
 
+// sweptBroadphaseRect calculates the broadphase area for a collidable. This creates a collision box which has been scaled
+// up to include where the box has travelled under its velocity.
 func sweptBroadphaseRect(b Collidable) pixel.Rect {
 	r := pixel.Rect{}
 	bRect := b.Rect().Norm()
@@ -70,55 +70,60 @@ func sweptBroadphaseRect(b Collidable) pixel.Rect {
 	return r
 }
 
-func sweptAABB(b1, b2 Collidable) (normal pixel.Vec, collision float64) {
-	b1Rect := b1.Rect().Norm()
-	b2Rect := b2.Rect().Norm()
+// sweptAABB checks for a collision between a moving AABB and a static AABB,
+// returning:
+// - the collisionTime: a value between 0 and 1 means a collision occurred
+// - the normal of the collided surface
+//
+// ref: https://www.gamedev.net/articles/programming/general-and-gameplay-programming/swept-aabb-collision-detection-and-response-r3084/
+func sweptAABB(moving, static Collidable) (collisionTime float64, normal pixel.Vec) {
+	movingRect := moving.Rect().Norm()
+	staticRect := static.Rect().Norm()
 
 	var entryInv, exitInv pixel.Vec
 
-	if b1.Vel().X > 0 {
-		entryInv.X = b2Rect.Min.X - (b1Rect.Min.X + b1Rect.W())
-		exitInv.X = (b2Rect.Min.X + b2Rect.W()) - b1Rect.Min.X
+	if moving.Vel().X > 0 {
+		entryInv.X = staticRect.Min.X - (movingRect.Min.X + movingRect.W())
+		exitInv.X = (staticRect.Min.X + staticRect.W()) - movingRect.Min.X
 	} else {
-		entryInv.X = (b2Rect.Min.X + b2Rect.W()) - b1Rect.Min.X
-		exitInv.X = b2Rect.Min.X - (b1Rect.Min.X + b1Rect.W())
+		entryInv.X = (staticRect.Min.X + staticRect.W()) - movingRect.Min.X
+		exitInv.X = staticRect.Min.X - (movingRect.Min.X + movingRect.W())
 	}
 
-	if b1.Vel().Y > 0 {
-		entryInv.Y = b2Rect.Min.Y - (b1Rect.Min.Y + b1Rect.H())
-		exitInv.Y = (b2Rect.Min.Y + b2Rect.H()) - b1Rect.Min.Y
+	if moving.Vel().Y > 0 {
+		entryInv.Y = staticRect.Min.Y - (movingRect.Min.Y + movingRect.H())
+		exitInv.Y = (staticRect.Min.Y + staticRect.H()) - movingRect.Min.Y
 	} else {
-		entryInv.Y = (b2Rect.Min.Y + b2Rect.H()) - b1Rect.Min.Y
-		exitInv.Y = b2Rect.Min.Y - (b1Rect.Min.Y + b1Rect.H())
+		entryInv.Y = (staticRect.Min.Y + staticRect.H()) - movingRect.Min.Y
+		exitInv.Y = staticRect.Min.Y - (movingRect.Min.Y + movingRect.H())
 	}
 
 	var entry, exit pixel.Vec
 
-	if b1.Vel().X == 0 {
+	if moving.Vel().X == 0 {
 		entry.X = math.Inf(-1)
 		exit.X = math.Inf(1)
 	} else {
-		entry.X = entryInv.X / b1.Vel().X
-		exit.X = exitInv.X / b1.Vel().X
+		entry.X = entryInv.X / moving.Vel().X
+		exit.X = exitInv.X / moving.Vel().X
 	}
 
-	if b1.Vel().Y == 0 {
+	if moving.Vel().Y == 0 {
 		entry.Y = math.Inf(-1)
 		exit.Y = math.Inf(1)
 	} else {
-		entry.Y = entryInv.Y / b1.Vel().Y
-		exit.Y = exitInv.Y / b1.Vel().Y
+		entry.Y = entryInv.Y / moving.Vel().Y
+		exit.Y = exitInv.Y / moving.Vel().Y
 	}
 
 	// earliest time of collision
 	entryTime := math.Max(entry.X, entry.Y)
 	exitTime := math.Min(exit.X, exit.Y)
 
-	// no collision
 	if entryTime > exitTime || entry.X < 0 && entry.Y < 0 || entry.X > 1 || entry.Y > 1 {
-		return pixel.ZV, 1.0
+		// no collision
+		return 1.0, pixel.ZV
 	} else {
-		println("prettysure theres a collision")
 		// collision
 		// calculate normal
 		if entry.X > entry.Y {
@@ -139,16 +144,6 @@ func sweptAABB(b1, b2 Collidable) (normal pixel.Vec, collision float64) {
 			}
 		}
 
-		return normal, entryTime
+		return entryTime, normal
 	}
-}
-
-func updatePositions() {
-	for x := range collidables {
-		collidables[x] = x.Rect()
-	}
-}
-
-func didCollide(a pixel.Rect, b pixel.Rect) bool {
-	return a.Norm().Intersect(b.Norm()).Area() != 0
 }
