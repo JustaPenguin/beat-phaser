@@ -27,10 +27,13 @@ func (w *world) init() {
 	w.character = &character{}
 	w.enemies = &enemiesCollection{}
 	w.character.init()
+	w.enemies.init()
 	w.mainScene = imdraw.New(nil)
 	w.weather = imdraw.New(nil)
 
-	w.rooms = append(w.rooms, &room{path: "images/world/rooms/room2.png"})
+	w.rooms = append(w.rooms, &room{path: "images/world/rooms/world-layer-background-bottom.png"})
+	w.rooms = append(w.rooms, &room{path: "images/world/rooms/world-layer-anim.png"})
+	w.rooms = append(w.rooms, &room{path: "images/world/rooms/world-layer-background-top.png", topLayer: true})
 
 	for _, room := range w.rooms {
 		room.init(room.path)
@@ -77,11 +80,20 @@ func (w *world) draw(t pixel.Target) {
 	w.weather.Clear()
 
 	for _, room := range w.rooms {
-		room.drawnRoom.Draw(t)
+		if !room.topLayer {
+			room.drawnRoom.Draw(t)
+		}
 	}
 
 	w.character.draw(t)
 	w.enemies.draw(t)
+
+	for _, room := range w.rooms {
+		if room.topLayer {
+			room.drawnRoom.Draw(t)
+		}
+	}
+
 	w.rain.draw(w.weather)
 
 	for _, p := range w.platforms {
@@ -141,11 +153,11 @@ func (p *platform) draw(imd *imdraw.IMDraw) {
 }
 
 type room struct {
+	topLayer  bool
 	path      string
 	drawnRoom *imdraw.IMDraw
 
 	img    pixel.Picture
-	imd    *imdraw.IMDraw
 	sprite *pixel.Sprite
 }
 
