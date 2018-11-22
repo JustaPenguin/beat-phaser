@@ -1,5 +1,3 @@
-github.com/Tarliton/collision2d v0.0.0-20160527013055-f7a088279920 h1:0IrTIOtqYxunLFS7/NZtdHDXifo0sjOnw2y2EhvDIFE=
-github.com/Tarliton/collision2d v0.0.0-20160527013055-f7a088279920/go.mod h1:xQkVqGFqY6zzdXxydhfUfJQfmSIAyx0XavFZgQK0F5o=
 github.com/faiface/beep v0.0.0-20181006150002-186a1b19424c h1:zpnxPI/dTQVcu40VQpB74yZZ3I9NfwBh6DkOTpxv0Cs=
 github.com/faiface/beep v0.0.0-20181006150002-186a1b19424c/go.mod h1:A22Xnws4HqzY9DZEtQCbYRbS1858XfgH6SCFUeRiXDI=
 github.com/faiface/glhf v0.0.0-20181018222622-82a6317ac380 h1:FvZ0mIGh6b3kOITxUnxS3tLZMh7yEoHo75v3/AgUqg0=
