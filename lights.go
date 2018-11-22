@@ -5,7 +5,7 @@ import (
 	"github.com/faiface/pixel/imdraw"
 )
 
-type colorlight struct {
+type colorLight struct {
 	color  pixel.RGBA
 	point  pixel.Vec
 	angle  float64
@@ -17,7 +17,7 @@ type colorlight struct {
 	imd *imdraw.IMDraw
 }
 
-func (cl *colorlight) apply(dst pixel.ComposeTarget, center pixel.Vec) {
+func (cl *colorLight) init() {
 	// create the light arc if not created already
 	if cl.imd == nil {
 		imd := imdraw.New(nil)
@@ -30,7 +30,9 @@ func (cl *colorlight) apply(dst pixel.ComposeTarget, center pixel.Vec) {
 		imd.Polygon(0)
 		cl.imd = imd
 	}
+}
 
+func (cl *colorLight) draw(dst pixel.ComposeTarget) {
 	// draw the light arc
 	dst.SetMatrix(pixel.IM.Scaled(pixel.ZV, cl.radius).Rotated(pixel.ZV, cl.angle).Moved(cl.point))
 	dst.SetColorMask(pixel.Alpha(1))
