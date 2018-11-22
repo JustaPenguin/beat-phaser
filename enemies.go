@@ -98,9 +98,9 @@ type enemy struct {
 	color1 pixel.RGBA
 	color2 pixel.RGBA
 
-	img    	pixel.Picture
-	imd 	*imdraw.IMDraw
-	sprite 	*pixel.Sprite
+	img    pixel.Picture
+	imd    *imdraw.IMDraw
+	sprite *pixel.Sprite
 }
 
 func (e *enemy) init() {

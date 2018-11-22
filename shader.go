@@ -148,7 +148,7 @@ win.Canvas().SetUniform("uTime", &uTime)
 win.Canvas().SetUniform("uSpeed", &uSpeed)
 uSpeed = 5.0
 
- */
+*/
 
 var fragmentShaderGreyScale = `
 #version 330 core

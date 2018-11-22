@@ -61,7 +61,7 @@ func (w *weapon) fire(origin pixel.Vec, angle float64, color color.Color) {
 		color:     color,
 		velocity:  pixel.V(w.speed, 0).Rotated(angle),
 		pos:       origin,
-		thickness: 2,
+		thickness: 10,
 	}
 	l.init()
 
@@ -157,10 +157,11 @@ func (w *weapon) update(dt float64, characterPos pixel.Vec, parentVelocity pixel
 }
 
 type laser struct {
-	color    color.Color
-	velocity pixel.Vec
+	color        color.Color
+	velocity     pixel.Vec
+	lastVelocity pixel.Vec
 
-	pos, prevPos pixel.Vec
+	pos pixel.Vec
 
 	thickness     float64
 	numCollisions int
@@ -174,32 +175,37 @@ func (l *laser) destroy() {
 	deregisterCollidable(l)
 }
 
-func (l *laser) HandleCollision(x Collidable) {
+func (l *laser) HandleCollision(x Collidable, collisionTime float64, normal pixel.Vec) {
 	switch x.(type) {
 	case *laser, *character:
 		return
 	}
 
-	r := x.Rect()
-
-	if int(l.prevPos.Y) <= int(r.Min.Y) || int(l.prevPos.Y) >= int(r.Max.Y) {
-		l.velocity.Y = -l.velocity.Y
-	} else {
+	if normal.X != 0 {
 		l.velocity.X = -l.velocity.X
+	}
+
+	if normal.Y != 0 {
+		l.velocity.Y = -l.velocity.Y
 	}
 
 	l.color = colornames.Hotpink
 	l.numCollisions++
 }
 
+func (l *laser) Vel() pixel.Vec {
+	return l.lastVelocity
+}
+
 func (l *laser) Rect() pixel.Rect {
-	return pixel.R(l.pos.X-1, l.pos.Y-1, l.pos.X, l.pos.Y)
+	return pixel.R(l.pos.X-l.thickness, l.pos.Y-l.thickness, l.pos.X, l.pos.Y).Moved(pixel.V(l.thickness/2, l.thickness/2))
 }
 
 func (l *laser) update(dt float64) {
-	l.prevPos = l.pos
+	l.lastVelocity = l.velocity.Scaled(dt)
+
 	// move the position or expire the laser
-	l.pos = l.pos.Add(l.velocity.Scaled(dt))
+	l.pos = l.pos.Add(l.lastVelocity)
 
 	if l.thickness > 0 {
 		l.thickness = l.thickness - 0.02

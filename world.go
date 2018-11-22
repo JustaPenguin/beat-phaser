@@ -8,20 +8,20 @@ import (
 
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/imdraw"
-	"golang.org/x/image/colornames"
 )
 
 type world struct {
 	character *character
 	enemies   *enemiesCollection
 
-	platforms []*platform
-	rain      *rain
-	rooms     []*room
+	rain  *rain
+	rooms []*room
 
 	weather   *imdraw.IMDraw
 	mainScene *imdraw.IMDraw
 }
+
+var wallMidpointPositionVec = pixel.V(0, -50)
 
 func (w *world) init() {
 	w.character = &character{}
@@ -31,31 +31,35 @@ func (w *world) init() {
 	w.mainScene = imdraw.New(nil)
 	w.weather = imdraw.New(nil)
 
+	w.rooms = append(w.rooms, &room{
+		path: "images/world/rooms/room2.png",
+		walls: []*wall{
+			// outside bounds
+			{rect: pixel.R(-700, -200, 700, -190)},                              // bottom outermost wall
+			{rect: pixel.R(-710, 700, -700, -200)},                              // left outermost wall
+			{rect: pixel.R(700, 700, 710, -200)},                                // right outermost wall
+			{rect: pixel.R(-700, 690, 700, 700).Moved(wallMidpointPositionVec)}, // top outermost wall
+
+			// room divisors - top rooms
+			{rect: pixel.R(-10, 685, -5, 540).Moved(wallMidpointPositionVec)},    // hat room right wall
+			{rect: pixel.R(-230, 690, -165, 540).Moved(wallMidpointPositionVec)}, // outside/inside horizontal boundary (top)
+			{rect: pixel.R(-230, 310, -165, 200).Moved(wallMidpointPositionVec)}, // outside/inside horizontal boundary (bottom)
+			{rect: pixel.R(-10, 310, -5, 200).Moved(wallMidpointPositionVec)},    // hat room right wall (bottom of gap)
+
+			// room divisors - bottom rooms
+			{rect: pixel.R(-700, 190, 0, 200).Moved(wallMidpointPositionVec)},   // horizontal room boundary to first door
+			{rect: pixel.R(140, 190, 315, 200).Moved(wallMidpointPositionVec)},  // horizontal room boundary between doors
+			{rect: pixel.R(455, 190, 700, 200).Moved(wallMidpointPositionVec)},  // horizontal room boundary to outer wall
+			{rect: pixel.R(150, 190, 160, -140).Moved(wallMidpointPositionVec)}, // vertical boundary between bottom two rooms
+		},
+	})
+
 	w.rooms = append(w.rooms, &room{path: "images/world/rooms/world-layer-background-bottom.png"})
 	w.rooms = append(w.rooms, &room{path: "images/world/rooms/world-layer-anim.png"})
 	w.rooms = append(w.rooms, &room{path: "images/world/rooms/world-layer-background-top.png", topLayer: true})
 
 	for _, room := range w.rooms {
 		room.init(room.path)
-	}
-
-	w.platforms = []*platform{
-		{rect: pixel.R(-50, -34, 50, -32)},
-		{rect: pixel.R(20, 0, 70, 2)},
-		{rect: pixel.R(-100, 10, -50, 12)},
-		{rect: pixel.R(120, -22, 140, -20)},
-		{rect: pixel.R(120, -72, 140, -70)},
-		{rect: pixel.R(120, -122, 140, -120)},
-		{rect: pixel.R(-100, -152, 100, -150)},
-		{rect: pixel.R(-150, -127, -140, -125)},
-		{rect: pixel.R(-180, -97, -170, -95)},
-		{rect: pixel.R(-150, -67, -140, -65)},
-		{rect: pixel.R(-180, -37, -170, -35)},
-		{rect: pixel.R(-150, -7, -140, -5)},
-	}
-	for i := range w.platforms {
-		w.platforms[i].color = randomNiceColor()
-		registerCollidable(w.platforms[i])
 	}
 
 	var rainDrops []pixel.Vec
@@ -96,10 +100,6 @@ func (w *world) draw(t pixel.Target) {
 
 	w.rain.draw(w.weather)
 
-	for _, p := range w.platforms {
-		p.draw(w.mainScene)
-	}
-
 	w.weather.Draw(t)
 	w.mainScene.Draw(t)
 }
@@ -133,31 +133,14 @@ func (r *rain) draw(imd *imdraw.IMDraw) {
 	}
 }
 
-type platform struct {
-	rect  pixel.Rect
-	color color.Color
-}
-
-func (p *platform) Rect() pixel.Rect {
-	return p.rect
-}
-
-func (p *platform) HandleCollision(x Collidable) {
-	p.color = colornames.Lightgoldenrodyellow
-}
-
-func (p *platform) draw(imd *imdraw.IMDraw) {
-	imd.Color = p.color
-	imd.Push(p.rect.Min, p.rect.Max)
-	imd.Rectangle(0)
-}
-
 type room struct {
 	topLayer  bool
 	path      string
 	drawnRoom *imdraw.IMDraw
+	walls     []*wall
 
 	img    pixel.Picture
+	imd    *imdraw.IMDraw
 	sprite *pixel.Sprite
 }
 
@@ -169,6 +152,12 @@ func (r *room) init(path string) {
 		panic(err)
 	}
 
+	r.imd = imdraw.New(nil)
+
+	for _, wall := range r.walls {
+		wall.init()
+	}
+
 	r.sprite = pixel.NewSprite(r.img, r.img.Bounds())
 
 	r.drawnRoom = imdraw.New(r.img)
@@ -178,6 +167,14 @@ func (r *room) init(path string) {
 func (r *room) draw(t pixel.Target) {
 	//r.sprite.Draw(t, pixel.IM.Scaled(r.sprite.Frame().Center(), 2.5))
 	r.sprite.Draw(t, pixel.IM)
+
+	r.imd.Clear()
+
+	for _, w := range r.walls {
+		w.draw(r.imd)
+	}
+
+	r.imd.Draw(t)
 }
 
 func loadPicture(path string) (pixel.Picture, error) {
@@ -191,4 +188,32 @@ func loadPicture(path string) (pixel.Picture, error) {
 		return nil, err
 	}
 	return pixel.PictureDataFromImage(img), nil
+}
+
+type wall struct {
+	rect pixel.Rect
+}
+
+func (w *wall) init() {
+	registerCollidable(w)
+}
+
+func (w *wall) update(dt float64) {
+
+}
+
+func (w *wall) draw(imd *imdraw.IMDraw) {
+
+}
+
+func (w *wall) Rect() pixel.Rect {
+	return w.rect
+}
+
+func (w *wall) Vel() pixel.Vec {
+	return pixel.ZV // walls don't move, dummy
+}
+
+func (w *wall) HandleCollision(c Collidable, collisionTime float64, normal pixel.Vec) {
+
 }

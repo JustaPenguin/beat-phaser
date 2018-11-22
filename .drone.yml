@@ -11,4 +11,5 @@ pipeline:
     - GO111MODULE=on
     commands:
     - apt-get update && apt-get install -y libgl1-mesa-dev xorg-dev libasound2-dev
+    - go get ./...
     - go build
