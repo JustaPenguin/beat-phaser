@@ -27,6 +27,7 @@ func (w *world) init() {
 	w.character = &character{}
 	w.enemies = &enemiesCollection{}
 	w.character.init()
+	w.enemies.init()
 	w.mainScene = imdraw.New(nil)
 	w.weather = imdraw.New(nil)
 
@@ -52,6 +53,10 @@ func (w *world) init() {
 			{rect: pixel.R(150, 190, 160, -140).Moved(wallMidpointPositionVec)}, // vertical boundary between bottom two rooms
 		},
 	})
+
+	w.rooms = append(w.rooms, &room{path: "images/world/rooms/world-layer-background-bottom.png"})
+	w.rooms = append(w.rooms, &room{path: "images/world/rooms/world-layer-anim.png"})
+	w.rooms = append(w.rooms, &room{path: "images/world/rooms/world-layer-background-top.png", topLayer: true})
 
 	for _, room := range w.rooms {
 		room.init(room.path)
@@ -79,12 +84,21 @@ func (w *world) draw(t pixel.Target) {
 	w.weather.Clear()
 
 	for _, room := range w.rooms {
-		room.drawnRoom.Draw(t)
+		if !room.topLayer {
+			room.drawnRoom.Draw(t)
+		}
 	}
 
 	w.character.draw(t)
 	w.enemies.draw(t)
-	//w.rain.draw(w.weather)
+
+	for _, room := range w.rooms {
+		if room.topLayer {
+			room.drawnRoom.Draw(t)
+		}
+	}
+
+	w.rain.draw(w.weather)
 
 	w.weather.Draw(t)
 	w.mainScene.Draw(t)
@@ -120,6 +134,7 @@ func (r *rain) draw(imd *imdraw.IMDraw) {
 }
 
 type room struct {
+	topLayer  bool
 	path      string
 	drawnRoom *imdraw.IMDraw
 	walls     []*wall

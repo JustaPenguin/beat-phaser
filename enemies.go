@@ -11,9 +11,18 @@ type enemiesCollection struct {
 
 	counter float64
 	step    float64
+
+	img pixel.Picture
 }
 
 func (e *enemiesCollection) init() {
+	var err error
+
+	e.img, err = loadPicture("images/sprites/reaper.png")
+	if err != nil {
+		panic(err)
+	}
+
 	e.enemies = append(e.enemies, enemy{
 		initialPos: pixel.Vec{X: 0, Y: 0},
 		pos:        pixel.Vec{X: 0, Y: 0},
@@ -23,6 +32,7 @@ func (e *enemiesCollection) init() {
 		color2: randomNiceColor(),
 
 		imd: imdraw.New(nil),
+		img: e.img,
 	})
 
 	e.step = 20
@@ -48,6 +58,7 @@ func (e *enemiesCollection) update(dt float64, targetPos pixel.Vec) {
 				color2: randomNiceColor(),
 
 				imd: imdraw.New(nil),
+				img: e.img,
 			})
 
 			e.step -= 1
@@ -58,6 +69,8 @@ func (e *enemiesCollection) update(dt float64, targetPos pixel.Vec) {
 
 			e.counter = 0
 		}
+
+		e.enemies[len(e.enemies)-1].init()
 	}
 
 	for i := range e.enemies {
@@ -85,11 +98,18 @@ type enemy struct {
 	color1 pixel.RGBA
 	color2 pixel.RGBA
 
-	imd *imdraw.IMDraw
+	img    pixel.Picture
+	imd    *imdraw.IMDraw
+	sprite *pixel.Sprite
 }
 
 func (e *enemy) init() {
 	e.step = 1
+
+	e.sprite = pixel.NewSprite(e.img, e.img.Bounds())
+
+	e.imd = imdraw.New(e.img)
+	e.draw(e.imd)
 }
 
 func (e *enemy) update(dt float64, targetPos pixel.Vec) {
@@ -108,6 +128,7 @@ func (e *enemy) update(dt float64, targetPos pixel.Vec) {
 	}
 
 	// Bezier curve lerp towards target
+	// @TODO control lerp speed?
 	m1 := pixel.Lerp(e.initialPos, e.midPoint, e.counter)
 	m2 := pixel.Lerp(e.midPoint, e.target, e.counter)
 
@@ -115,23 +136,5 @@ func (e *enemy) update(dt float64, targetPos pixel.Vec) {
 }
 
 func (e *enemy) draw(t pixel.Target) {
-	e.imd.Clear()
-
-	e.imd.Color = e.color1
-
-	e.imd.Push(pixel.V(e.pos.X, e.pos.Y))
-	e.imd.Push(pixel.V(e.pos.X-5, e.pos.Y+0))
-	e.imd.Push(pixel.V(e.pos.X-5, e.pos.Y+1))
-	e.imd.Push(pixel.V(e.pos.X-2.5, e.pos.Y+1))
-
-	e.imd.Color = e.color2
-
-	e.imd.Push(pixel.V(e.pos.X-2.5, e.pos.Y+5))
-	e.imd.Push(pixel.V(e.pos.X+2.5, e.pos.Y+5))
-	e.imd.Push(pixel.V(e.pos.X+2.5, e.pos.Y+1))
-	e.imd.Push(pixel.V(e.pos.X+5, e.pos.Y+1))
-	e.imd.Push(pixel.V(e.pos.X+5, e.pos.Y+0))
-	e.imd.Polygon(0)
-
-	e.imd.Draw(t)
+	e.sprite.Draw(t, pixel.IM.Moved(e.pos))
 }

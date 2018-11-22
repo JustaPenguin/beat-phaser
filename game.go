@@ -119,14 +119,31 @@ func (g *game) run() {
 	last := time.Now()
 	frames := 0
 
+	win.Canvas().SetUniform("iTime", &iTime)
+	win.Canvas().SetUniform("iMouse", &iMouse)
+	win.Canvas().SetUniform("iLightPos", &iLightPos)
+
+	for i := range iMouse {
+		iMouse[i] = 5
+	}
+
+	win.Canvas().SetFragmentShader(fragmentShaderLighting)
+
 	for !win.Closed() {
 		dt := time.Since(last).Seconds()
 		last = time.Now()
+
+		iTime += float32(dt)
 
 		// lerp the camera position towards the body
 		camPos = pixel.Lerp(camPos, g.world.character.body.rect.Center(), 1-math.Pow(1.0/128, dt))
 		cam := pixel.IM.Moved(camPos.Scaled(-1))
 		canvas.SetMatrix(cam)
+
+		// Q: Why are these position modifiers different for each axis?
+		// A: I have no clue.
+		iLightPos[0] = float32(0.002 - camPos.X*0.0008)
+		iLightPos[1] = float32(-0.15 - camPos.Y*0.0014)
 
 		// slow motion with tab
 		if win.Pressed(pixelgl.KeyTab) {
