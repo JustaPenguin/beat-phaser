@@ -119,7 +119,7 @@ func (g *game) run() {
 	last := time.Now()
 	frames := 0
 
-	win.Canvas().SetUniform("iTime", &iTime)
+	/*win.Canvas().SetUniform("iTime", &iTime)
 	win.Canvas().SetUniform("iMouse", &iMouse)
 	win.Canvas().SetUniform("iLightPos", &iLightPos)
 
@@ -127,13 +127,15 @@ func (g *game) run() {
 		iMouse[i] = 5
 	}
 
-	win.Canvas().SetFragmentShader(fragmentShaderLighting)
+	win.Canvas().SetFragmentShader(fragmentShaderLighting)*/
+
+	fps60 := time.Tick(time.Second / 60) // You can impose fps limits here
 
 	for !win.Closed() {
 		dt := time.Since(last).Seconds()
 		last = time.Now()
 
-		iTime += float32(dt)
+		//iTime += float32(dt)
 
 		// lerp the camera position towards the body
 		camPos = pixel.Lerp(camPos, g.world.character.body.rect.Center(), 1-math.Pow(1.0/128, dt))
@@ -168,6 +170,8 @@ func (g *game) run() {
 			frames = 0
 		default:
 		}
+
+		<-fps60
 	}
 }
 

@@ -12,7 +12,7 @@ import (
 
 // handgun is a simple handgun-like weapon
 var handgun = &weapon{
-	speed: 100,
+	speed: 500,
 	points: []pixel.Vec{
 		pixel.V(0, 0),
 		pixel.V(1, 0),
@@ -36,6 +36,8 @@ type weapon struct {
 	imdraw    *imdraw.IMDraw
 
 	increment, multiplier int
+
+	hitSplashes []*hitSplash
 
 	// sounds
 	pringlePhaser *soundEffect
@@ -83,6 +85,10 @@ func (w *weapon) draw(t pixel.Target) {
 
 	for _, laser := range w.lasers {
 		laser.draw(w.imdraw)
+	}
+
+	for _, hitSplash := range w.hitSplashes {
+		hitSplash.draw(w.imdraw)
 	}
 
 	w.imdraw.Draw(t)
@@ -145,8 +151,24 @@ func (w *weapon) update(dt float64, characterPos pixel.Vec, parentVelocity pixel
 	for i, laser := range w.lasers {
 		laser.update(dt)
 
+		if laser.splash {
+			w.hitSplashes = append(w.hitSplashes, &hitSplash{
+				pos:    laser.Rect().Center(),
+				normal: laser.splashNormal,
+			})
+		}
+
 		if laser.numCollisions > 3 || laser.thickness <= 0 {
 			toRemove = append(toRemove, i)
+		}
+	}
+
+	for i := len(w.hitSplashes) - 1; i >= 0; i-- {
+		w.hitSplashes[i].update()
+
+		// If enemy is ded remove from slice
+		if w.hitSplashes[i].done {
+			w.hitSplashes = w.hitSplashes[:i+copy(w.hitSplashes[i:], w.hitSplashes[i+1:])]
 		}
 	}
 
@@ -165,6 +187,8 @@ type laser struct {
 
 	thickness     float64
 	numCollisions int
+	splash        bool
+	splashNormal  pixel.Vec
 }
 
 func (l *laser) init() {
@@ -172,6 +196,9 @@ func (l *laser) init() {
 }
 
 func (l *laser) destroy() {
+	// increasing collisions arbitrarily causes removal of laser
+	l.numCollisions = 4
+
 	deregisterCollidable(l)
 }
 
@@ -179,6 +206,11 @@ func (l *laser) HandleCollision(x Collidable, collisionTime float64, normal pixe
 	switch x.(type) {
 	case *laser, *character:
 		return
+	case *enemy:
+		//@TODO create "hit" splash
+		l.splash = true
+		l.splashNormal = normal
+		l.destroy()
 	}
 
 	if normal.X != 0 {
@@ -218,4 +250,41 @@ func (l *laser) draw(imd *imdraw.IMDraw) {
 
 	imd.Push(l.pos)
 	imd.Polygon(l.thickness)
+}
+
+type hitSplash struct {
+	pos    pixel.Vec
+	normal pixel.Vec
+
+	x    float64
+	done bool
+
+	imd *imdraw.IMDraw
+}
+
+func (h *hitSplash) init() {
+
+}
+
+func (h *hitSplash) update() {
+	h.x++
+
+	if h.x > 10 {
+		h.done = true
+	}
+}
+
+func (h *hitSplash) draw(imd *imdraw.IMDraw) {
+	if imd == nil {
+		imd = imdraw.New(nil)
+	}
+
+	imd.Color = pixel.RGB(1, 1, 1)
+
+	imd.Push(pixel.V(h.pos.X+h.x, h.pos.Y))
+	imd.Push(pixel.V(h.pos.X, h.pos.Y+h.x))
+	imd.Push(pixel.V(h.pos.X-h.x, h.pos.Y))
+	imd.Push(pixel.V(h.pos.X, h.pos.Y-h.x))
+
+	imd.Polygon(0)
 }
