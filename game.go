@@ -118,8 +118,10 @@ func (g *game) run() {
 	canvas := pixelgl.NewCanvas(pixel.R(-1920/3, -1080/3, 1920/3, 1080/3))
 	last := time.Now()
 	frames := 0
-/*
-	win.Canvas().SetUniform("iTime", &iTime)
+
+
+	/*win.Canvas().SetUniform("iTime", &iTime)
+
 	win.Canvas().SetUniform("iMouse", &iMouse)
 	win.Canvas().SetUniform("iLightPos", &iLightPos)
 
@@ -129,11 +131,14 @@ func (g *game) run() {
 
 	win.Canvas().SetFragmentShader(fragmentShaderLighting)
 */
+
+	frameLimit := time.Tick(time.Second/144)
+
 	for !win.Closed() {
 		dt := time.Since(last).Seconds()
 		last = time.Now()
 
-		iTime += float32(dt)
+		//iTime += float32(dt)
 
 		// lerp the camera position towards the body
 		camPos = pixel.Lerp(camPos, g.world.character.body.rect.Center(), 1-math.Pow(1.0/128, dt))
@@ -168,6 +173,8 @@ func (g *game) run() {
 			frames = 0
 		default:
 		}
+
+		<-frameLimit
 	}
 }
 
