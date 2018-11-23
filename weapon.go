@@ -141,7 +141,7 @@ func (w *weapon) update(dt float64, characterPos pixel.Vec, parentVelocity pixel
 
 		w.fire(w.matrix.Project(characterPos.Add(w.points[len(w.points)-1])), a, c)
 
-		gameScore.setMultiplier(w.multiplier)
+		//gameScore.setMultiplier(w.multiplier)
 
 		go w.pringlePhaser.play()
 	}

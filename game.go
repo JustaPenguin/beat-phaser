@@ -9,9 +9,7 @@ import (
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/imdraw"
 	"github.com/faiface/pixel/pixelgl"
-	"github.com/faiface/pixel/text"
 	"golang.org/x/image/colornames"
-	"golang.org/x/image/font/basicfont"
 )
 
 func init() {
@@ -21,13 +19,13 @@ func init() {
 var (
 	win    *pixelgl.Window
 	camPos pixel.Vec
+	// Acid jazz bpm is 55, backed vibes is 103 (52?)
 	bpm    float64 = 103
-
-	gameScore *score
 )
 
 type game struct {
 	world *world
+	score *score
 
 	collisionBoxes *imdraw.IMDraw
 }
@@ -36,10 +34,8 @@ func (g *game) init() error {
 	g.world = &world{}
 	g.world.init()
 
-	gameScore = &score{
-		multiplier: 0,
-		pos:        pixel.V(0, 0),
-	}
+	g.score = &score{}
+	g.score.init()
 
 	// camera
 	camPos = pixel.ZV
@@ -49,6 +45,8 @@ func (g *game) init() error {
 
 func (g *game) update(dt float64) {
 	g.world.update(dt)
+
+	g.score.update()
 }
 
 var drawCollisionBoxes = false
@@ -58,7 +56,7 @@ func (g *game) draw(canvas *pixelgl.Canvas) {
 	canvas.Clear(colornames.Black)
 
 	g.world.draw(canvas)
-	gameScore.draw()
+	g.score.draw()
 
 	if win.JustPressed(pixelgl.KeyC) {
 		drawCollisionBoxes = !drawCollisionBoxes
@@ -77,7 +75,7 @@ func (g *game) draw(canvas *pixelgl.Canvas) {
 	).Moved(win.Bounds().Center()))
 	canvas.Draw(win, pixel.IM.Moved(canvas.Bounds().Center()))
 
-	gameScore.text.Draw(win, pixel.IM.Moved(canvas.Bounds().Min))
+	g.score.text.Draw(win, pixel.IM.Moved(canvas.Bounds().Min))
 }
 
 func (g *game) collisions() {
@@ -129,8 +127,6 @@ func (g *game) run() {
 
 	win.Canvas().SetFragmentShader(fragmentShaderLighting)*/
 
-	fps60 := time.Tick(time.Second / 60) // You can impose fps limits here
-
 	frameLimit := time.Tick(time.Second/144)
 
 	for !win.Closed() {
@@ -173,37 +169,6 @@ func (g *game) run() {
 		default:
 		}
 
-		<-fps60
+		<-frameLimit
 	}
-}
-
-type score struct {
-	multiplier int
-	pos        pixel.Vec
-
-	text *text.Text
-}
-
-func (s *score) setMultiplier(multiplier int) {
-	s.multiplier = multiplier
-}
-
-func (s *score) draw() {
-	atlas := text.NewAtlas(
-		basicfont.Face7x13,
-		[]rune{'0', '1', '2', '3', '4', '5', '6', '7', '8', 'x'},
-	)
-
-	s.text = text.New(s.pos, atlas)
-
-	// @TODO colours for scores, perhaps a little animated multi tone stuff for big ones
-	switch s.multiplier {
-	case 1:
-		s.text.Color = colornames.Aqua
-	case 2:
-		s.text.Color = colornames.Coral
-
-	}
-
-	fmt.Fprintf(s.text, "%dx", s.multiplier)
 }

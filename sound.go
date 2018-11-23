@@ -46,12 +46,16 @@ func (s *soundEffect) play() {
 	}
 
 	speaker.Play(beep.Seq(&effectVolume, beep.Callback(func() {
-		s.decoded.Seek(0)
+		err := s.decoded.Seek(0)
+
+		if err != nil {
+			panic(err)
+		}
 	})))
 }
 
 func loadAudio() {
-	f1, err := os.Open("audio/tracks/Kevin_MacLeod_Backed_Vibes_Clean.mp3")
+	f1, err := os.Open("audio/tracks/Kevin_MacLeod_-_AcidJazz.mp3")
 
 	if err != nil {
 		panic(err)
@@ -63,7 +67,11 @@ func loadAudio() {
 		panic(err)
 	}
 
-	speaker.Init(format.SampleRate, format.SampleRate.N(time.Second/10))
+	err = speaker.Init(format.SampleRate, format.SampleRate.N(time.Second/10))
+
+	if err != nil {
+		panic(err)
+	}
 
 	playing := make(chan struct{})
 
@@ -71,7 +79,7 @@ func loadAudio() {
 		Streamer: s1,
 		Base:     2,
 		Volume:   -3,
-		Silent:   true,
+		Silent:   false,
 	}
 
 	speaker.Play(beep.Seq(&songVolume, beep.Callback(func() {
