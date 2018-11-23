@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"image/color"
 	"math"
 
@@ -139,17 +140,32 @@ type body struct {
 	dir     float64
 	frame   pixel.Rect
 	sprite  *pixel.Sprite
+
+	// arm sprite
+	armSprite *pixel.Sprite
+	armMatrix pixel.Matrix
 }
 
 func (gp *body) init() {
 	if gp.sheet == nil || gp.anims == nil {
 		var err error
 
-		gp.sheet, gp.anims, err = loadAnimationSheet("spike", 124)
+		gp.sheet, gp.anims, err = loadAnimationSheet("spike", 104)
 
 		if err != nil {
 			panic(err)
 		}
+	}
+
+
+	if gp.armSprite == nil {
+		im, err := loadPicture("images/sprites/arm.png")
+
+		if err != nil {
+			panic(err)
+		}
+
+		gp.armSprite = pixel.NewSprite(im, im.Bounds())
 	}
 }
 
@@ -239,6 +255,27 @@ func (gp *body) update(dt float64) {
 			gp.dir = +1
 		}
 	}
+
+	gp.updateArm(dt)
+}
+
+func (gp *body) updateArm(dt float64) {
+	pb := gp.armSprite.Picture().Bounds()
+	pb.Max = pb.Max.Rotated(getMouseAngleFromCenter())
+
+	// draw arm
+	armPos := gp.rect.Center().Add(pixel.V(40, 40))
+	fmt.Println(gp.frame)
+
+	a := getMouseAngleFromCenter()
+
+	if win.MousePosition().X < win.Bounds().Center().X {
+		a += math.Pi
+	}
+
+	gp.armMatrix = pixel.IM.Moved(armPos). // move the picture to the armPos
+		ScaledXY(gp.rect.Center(), pixel.V(-gp.dir, 1)). // scale it by the direction
+		Rotated(armPos.Add(pixel.V(pb.W()/2*gp.dir, 0)),a)
 }
 
 func (gp *body) draw(t pixel.Target) {
@@ -247,6 +284,11 @@ func (gp *body) draw(t pixel.Target) {
 	}
 
 	gp.imd.Clear()
+
+	if gp.state != idle {
+		// only draw the arm if we're not idling
+		gp.armSprite.Draw(t, gp.armMatrix)
+	}
 
 	if gp.sprite == nil {
 		gp.sprite = pixel.NewSprite(nil, pixel.Rect{})

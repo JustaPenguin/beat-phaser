@@ -118,7 +118,7 @@ func (g *game) run() {
 	canvas := pixelgl.NewCanvas(pixel.R(-1920/3, -1080/3, 1920/3, 1080/3))
 	last := time.Now()
 	frames := 0
-
+/*
 	win.Canvas().SetUniform("iTime", &iTime)
 	win.Canvas().SetUniform("iMouse", &iMouse)
 	win.Canvas().SetUniform("iLightPos", &iLightPos)
@@ -128,7 +128,7 @@ func (g *game) run() {
 	}
 
 	win.Canvas().SetFragmentShader(fragmentShaderLighting)
-
+*/
 	for !win.Closed() {
 		dt := time.Since(last).Seconds()
 		last = time.Now()

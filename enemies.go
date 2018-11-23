@@ -136,5 +136,6 @@ func (e *enemy) update(dt float64, targetPos pixel.Vec) {
 }
 
 func (e *enemy) draw(t pixel.Target) {
+	return // @TODO remvoeme
 	e.sprite.Draw(t, pixel.IM.Moved(e.pos))
 }

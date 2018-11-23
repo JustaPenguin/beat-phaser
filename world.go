@@ -165,7 +165,7 @@ func (r *room) init(path string) {
 }
 
 func (r *room) draw(t pixel.Target) {
-	//r.sprite.Draw(t, pixel.IM.Scaled(r.sprite.Frame().Center(), 2.5))
+	//r.image.Draw(t, pixel.IM.Scaled(r.image.Frame().Center(), 2.5))
 	r.sprite.Draw(t, pixel.IM)
 
 	r.imd.Clear()
