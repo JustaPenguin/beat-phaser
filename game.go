@@ -129,6 +129,8 @@ func (g *game) run() {
 
 	win.Canvas().SetFragmentShader(fragmentShaderLighting)
 
+	frameLimit := time.Tick(time.Second/144)
+
 	for !win.Closed() {
 		dt := time.Since(last).Seconds()
 		last = time.Now()
@@ -168,6 +170,8 @@ func (g *game) run() {
 			frames = 0
 		default:
 		}
+
+		<-frameLimit
 	}
 }
 
