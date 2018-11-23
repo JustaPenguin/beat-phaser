@@ -131,6 +131,8 @@ func (g *game) run() {
 
 	fps60 := time.Tick(time.Second / 60) // You can impose fps limits here
 
+	frameLimit := time.Tick(time.Second/144)
+
 	for !win.Closed() {
 		dt := time.Since(last).Seconds()
 		last = time.Now()
