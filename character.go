@@ -48,7 +48,7 @@ func (c *character) init() {
 	c.body = &body{
 		// phys
 		gravity:   -512,
-		runSpeed:  3,
+		runSpeed:  300,
 		jumpSpeed: 192,
 		rect:      pixel.R(-62, -74, 62, 74),
 		rate:      1.0 / 10,
@@ -187,6 +187,9 @@ func (gp *body) update(dt float64) {
 	default:
 		gp.vel.Y = 0
 	}
+
+	gp.vel = gp.vel.Scaled(dt)
+
 
 	// apply gravity and velocity
 	gp.rect = gp.rect.Moved(gp.vel)
