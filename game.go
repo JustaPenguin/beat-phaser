@@ -19,13 +19,14 @@ func init() {
 var (
 	win    *pixelgl.Window
 	camPos pixel.Vec
-	// Acid jazz bpm is 55, backed vibes is 103 (52?)
-	bpm    float64 = 103
+	// Acid jazz bpm is 111.something, backed vibes is 103
+	bpm    float64 = 110.6
+
+	playerScore *score
 )
 
 type game struct {
 	world *world
-	score *score
 
 	collisionBoxes *imdraw.IMDraw
 }
@@ -34,8 +35,8 @@ func (g *game) init() error {
 	g.world = &world{}
 	g.world.init()
 
-	g.score = &score{}
-	g.score.init()
+	playerScore = &score{}
+	playerScore.init()
 
 	// camera
 	camPos = pixel.ZV
@@ -46,7 +47,7 @@ func (g *game) init() error {
 func (g *game) update(dt float64) {
 	g.world.update(dt)
 
-	g.score.update()
+	playerScore.update()
 }
 
 var drawCollisionBoxes = false
@@ -56,7 +57,7 @@ func (g *game) draw(canvas *pixelgl.Canvas) {
 	canvas.Clear(colornames.Black)
 
 	g.world.draw(canvas)
-	g.score.draw()
+	playerScore.draw()
 
 	if win.JustPressed(pixelgl.KeyC) {
 		drawCollisionBoxes = !drawCollisionBoxes
@@ -75,7 +76,7 @@ func (g *game) draw(canvas *pixelgl.Canvas) {
 	).Moved(win.Bounds().Center()))
 	canvas.Draw(win, pixel.IM.Moved(canvas.Bounds().Center()))
 
-	g.score.text.Draw(win, pixel.IM.Moved(canvas.Bounds().Min))
+	playerScore.text.Draw(win, pixel.IM.Moved(canvas.Bounds().Min))
 }
 
 func (g *game) collisions() {
@@ -128,6 +129,8 @@ func (g *game) run() {
 	win.Canvas().SetFragmentShader(fragmentShaderLighting)*/
 
 	frameLimit := time.Tick(time.Second/144)
+
+	go loadAudio()
 
 	for !win.Closed() {
 		dt := time.Since(last).Seconds()
