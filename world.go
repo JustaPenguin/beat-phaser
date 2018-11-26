@@ -1,6 +1,7 @@
 package main
 
 import (
+	"golang.org/x/image/colornames"
 	"image"
 	"image/color"
 	"math/rand"
@@ -106,6 +107,8 @@ func (w *world) draw(t pixel.Target) {
 		}
 	}
 
+	//w.ui.draw
+
 	w.rain.draw(w.weather)
 
 	w.weather.Draw(t)
@@ -114,10 +117,18 @@ func (w *world) draw(t pixel.Target) {
 
 type rain struct {
 	positions []pixel.Vec
+
+	color color.Color
 }
 
 func (r *rain) update(lowerLimit, top float64) {
 	xRange := rand.Float64() - 0.5
+
+	if playerScore.timeWindow {
+		r.color = colornames.Blueviolet
+	} else {
+		r.color = colornames.Blue
+	}
 
 	for i := range r.positions {
 		r.positions[i].Y -= rand.Float64()
@@ -130,7 +141,7 @@ func (r *rain) update(lowerLimit, top float64) {
 }
 
 func (r *rain) draw(imd *imdraw.IMDraw) {
-	imd.Color = color.White
+	imd.Color = r.color
 
 	for _, position := range r.positions {
 		imd.Push(pixel.V(position.X, position.Y))

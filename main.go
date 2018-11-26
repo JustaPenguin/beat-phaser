@@ -92,8 +92,6 @@ func randomNiceColor() pixel.RGBA {
 }
 
 func main() {
-	go loadAudio()
-
 	pixelgl.Run(run)
 }
 
