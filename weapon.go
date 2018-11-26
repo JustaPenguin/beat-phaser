@@ -11,26 +11,16 @@ import (
 // handgun is a simple handgun-like weapon
 var handgun = &weapon{
 	speed: 500,
-	points: []pixel.Vec{
-		pixel.V(0, 0),
-		pixel.V(1, 0),
-		pixel.V(2, 0),
-		pixel.V(2, 2),
-		pixel.V(3, 2),
-		pixel.V(4, 2),
-		pixel.V(5, 2),
-	},
 }
 
 type weapon struct {
 	lasers []*laser
 	speed  float64
-	points []pixel.Vec
 
 	matrix    pixel.Matrix
 	parentPos pixel.Vec
 
-	imdraw    *imdraw.IMDraw
+	imdraw *imdraw.IMDraw
 
 	hitSplashes []*hitSplash
 
@@ -66,15 +56,6 @@ func (w *weapon) fire(origin pixel.Vec, angle float64, color color.Color) {
 
 func (w *weapon) draw(t pixel.Target) {
 	w.imdraw.Clear()
-	w.imdraw.SetMatrix(w.matrix)
-
-	w.imdraw.Color = colornames.Blueviolet
-
-	for _, pt := range w.points {
-		w.imdraw.Push(pt.Add(w.parentPos))
-	}
-
-	w.imdraw.Polygon(1)
 	w.imdraw.SetMatrix(pixel.IM)
 
 	for _, laser := range w.lasers {
@@ -90,7 +71,6 @@ func (w *weapon) draw(t pixel.Target) {
 
 func (w *weapon) update(dt float64, characterPos pixel.Vec, parentVelocity pixel.Vec) {
 	w.parentPos = characterPos.Add(pixel.V(5, 0))
-	w.matrix = pixel.IM.Rotated(w.points[0].Add(characterPos), getMouseAngleFromCenter())
 
 	if parentVelocity.X < 0 && win.MousePosition().X < win.Bounds().Center().X {
 		w.matrix = w.matrix.Scaled(characterPos, -1).Moved(pixel.V(-10, 0))
@@ -107,27 +87,26 @@ func (w *weapon) update(dt float64, characterPos pixel.Vec, parentVelocity pixel
 			c = colornames.Black
 		}
 
-		w.fire(w.matrix.Project(characterPos.Add(w.points[len(w.points)-1])), a, c)
+		w.fire(characterPos, a, c)
 
 		go w.pringlePhaser.play()
 	}
 
-	var toRemove []int
+	for i := len(w.lasers) - 1; i >= 0; i-- {
+		w.lasers[i].update(dt)
 
-	for i, laser := range w.lasers {
-		laser.update(dt)
-
-		if laser.splash {
+		if w.lasers[i].splash {
 			w.hitSplashes = append(w.hitSplashes, &hitSplash{
-				pos:    laser.Rect().Center(),
-				normal: laser.splashNormal,
+				pos:    w.lasers[i].Rect().Center(),
+				normal: w.lasers[i].splashNormal,
 
 				color: playerScore.text.Color,
 			})
 		}
 
-		if laser.numCollisions > 3 || laser.thickness <= 0 {
-			toRemove = append(toRemove, i)
+		if w.lasers[i].numCollisions > 3 || w.lasers[i].thickness <= 0 {
+			w.lasers[i].destroy()
+			w.lasers = w.lasers[:i+copy(w.lasers[i:], w.lasers[i+1:])]
 		}
 	}
 
@@ -139,11 +118,6 @@ func (w *weapon) update(dt float64, characterPos pixel.Vec, parentVelocity pixel
 			w.hitSplashes = w.hitSplashes[:i+copy(w.hitSplashes[i:], w.hitSplashes[i+1:])]
 		}
 	}
-
-	/*for _, i := range toRemove {
-		w.lasers[i].destroy()
-		w.lasers = append(w.lasers[:i], w.lasers[i+1:]...)
-	}*/
 }
 
 type laser struct {
@@ -189,7 +163,6 @@ func (l *laser) HandleCollision(x Collidable, collisionTime float64, normal pixe
 		l.velocity.Y = -l.velocity.Y
 	}
 
-	l.color = colornames.Hotpink
 	l.numCollisions++
 }
 
@@ -227,7 +200,7 @@ type hitSplash struct {
 	x    float64
 	done bool
 
-	imd *imdraw.IMDraw
+	imd   *imdraw.IMDraw
 	color color.Color
 }
 

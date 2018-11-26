@@ -1,9 +1,10 @@
 package main
 
 import (
+	"image/color"
+
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/imdraw"
-	"image/color"
 )
 
 type character struct {
@@ -62,7 +63,7 @@ func (c *character) init() {
 
 func (c *character) update(dt float64) {
 	c.body.update(dt)
-	c.weapon.update(dt, c.body.rect.Center(), c.body.vel)
+	c.weapon.update(dt, c.body.shootPos, c.body.vel)
 }
 
 func (c *character) draw(t pixel.Target) {

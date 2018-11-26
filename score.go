@@ -15,11 +15,11 @@ type score struct {
 	increment  int
 	pos        pixel.Vec
 
-	startTime time.Time
+	startTime          time.Time
 	timeWindow, onBeat bool
 
 	atlas *text.Atlas
-	text *text.Text
+	text  *text.Text
 }
 
 func (s *score) setMultiplier(multiplier int) {
@@ -50,7 +50,6 @@ func (s *score) draw() {
 	case 8:
 		s.text.Color = colornames.Red
 
-
 	}
 
 	_, err := fmt.Fprintf(s.text, "%dx", s.multiplier)
@@ -74,13 +73,12 @@ func (s *score) init() {
 
 func (s *score) update() {
 	// If time is within 10ms of the bpm (from start time)
-	timeSince := (time.Now().UnixNano() - s.startTime.UnixNano()) % (int64(60000000000/bpm))
+	timeSince := (time.Now().UnixNano() - s.startTime.UnixNano()) % (int64(60000000000 / bpm))
 	if timeSince <= 100000000 || timeSince >= 400000000 {
 		s.timeWindow = true
 	} else {
 		s.timeWindow = false
 	}
-
 
 	if win.JustPressed(pixelgl.MouseButtonLeft) {
 

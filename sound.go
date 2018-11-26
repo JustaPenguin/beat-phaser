@@ -76,14 +76,62 @@ func loadAudio() {
 	playing := make(chan struct{})
 
 	songVolume := effects.Volume{
-		Streamer: s1,
-		Base:     2,
-		Volume:   -3,
-		Silent:   false,
+		Streamer: Loop(-1, s1, func() {
+			playerScore.startTime = time.Now()
+		}),
+		Base:   2,
+		Volume: -3,
+		Silent: false,
 	}
 
 	speaker.Play(beep.Seq(&songVolume, beep.Callback(func() {
 		close(playing)
 	})))
 	<-playing
+}
+
+func Loop(count int, s beep.StreamSeeker, cb func()) beep.Streamer {
+	return &loopCallback{
+		s:        s,
+		remains:  count,
+		callback: cb,
+	}
+}
+
+type loopCallback struct {
+	s        beep.StreamSeeker
+	remains  int
+	callback func()
+}
+
+func (l *loopCallback) Stream(samples [][2]float64) (n int, ok bool) {
+	if l.remains == 0 || l.s.Err() != nil {
+		return 0, false
+	}
+	for len(samples) > 0 {
+		sn, sok := l.s.Stream(samples)
+		if !sok {
+
+			if l.remains == 0 {
+				break
+			}
+			err := l.s.Seek(0)
+			if err != nil {
+				return n, true
+			}
+			if l.remains > 0 {
+				l.remains--
+			}
+
+			l.callback()
+			continue
+		}
+		samples = samples[sn:]
+		n += sn
+	}
+	return n, true
+}
+
+func (l *loopCallback) Err() error {
+	return l.s.Err()
 }
