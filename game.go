@@ -119,7 +119,6 @@ func (g *game) run() {
 	last := time.Now()
 	frames := 0
 
-
 	/*win.Canvas().SetUniform("iTime", &iTime)
 
 	win.Canvas().SetUniform("iMouse", &iMouse)
@@ -130,9 +129,9 @@ func (g *game) run() {
 	}
 
 	win.Canvas().SetFragmentShader(fragmentShaderLighting)
-*/
+	*/
 
-	frameLimit := time.Tick(time.Second/144)
+	frameLimit := time.Tick(time.Second / 144)
 
 	for !win.Closed() {
 		dt := time.Since(last).Seconds()

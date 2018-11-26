@@ -109,4 +109,3 @@ func (h *hat) draw(t pixel.Target) {
 
 	imd.Draw(t)
 }
-

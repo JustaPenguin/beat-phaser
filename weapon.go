@@ -126,20 +126,19 @@ func (w *weapon) update(dt float64, characterPos pixel.Vec, parentVelocity pixel
 		go w.pringlePhaser.play()
 	}
 
-	var toRemove []int
+	for i := len(w.lasers) - 1; i >= 0; i-- {
+		w.lasers[i].update(dt)
 
-	for i, laser := range w.lasers {
-		laser.update(dt)
-
-		if laser.splash {
+		if w.lasers[i].splash {
 			w.hitSplashes = append(w.hitSplashes, &hitSplash{
-				pos:    laser.Rect().Center(),
-				normal: laser.splashNormal,
+				pos:    w.lasers[i].Rect().Center(),
+				normal: w.lasers[i].splashNormal,
 			})
 		}
 
-		if laser.numCollisions > 3 || laser.thickness <= 0 {
-			toRemove = append(toRemove, i)
+		if w.lasers[i].numCollisions > 3 || w.lasers[i].thickness <= 0 {
+			w.lasers[i].destroy()
+			w.lasers = w.lasers[:i+copy(w.lasers[i:], w.lasers[i+1:])]
 		}
 	}
 
@@ -150,11 +149,6 @@ func (w *weapon) update(dt float64, characterPos pixel.Vec, parentVelocity pixel
 		if w.hitSplashes[i].done {
 			w.hitSplashes = w.hitSplashes[:i+copy(w.hitSplashes[i:], w.hitSplashes[i+1:])]
 		}
-	}
-
-	for _, i := range toRemove {
-		w.lasers[i].destroy()
-		w.lasers = append(w.lasers[:i], w.lasers[i+1:]...)
 	}
 }
 

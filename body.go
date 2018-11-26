@@ -1,8 +1,6 @@
 package main
 
 import (
-	"fmt"
-	"golang.org/x/image/colornames"
 	"math"
 
 	"github.com/faiface/pixel"
@@ -18,16 +16,16 @@ const (
 	jumping
 	shooting
 
-	leftNormal string = "left"
+	leftNormal  string = "left"
 	rightNormal string = "right"
-	upNormal string = "up"
-	downNormal string = "down"
+	upNormal    string = "up"
+	downNormal  string = "down"
 )
 
 var normalMap map[string]pixel.Vec
 
 type body struct {
-	imd, xImd *imdraw.IMDraw
+	imd *imdraw.IMDraw
 
 	// phys
 	gravity   float64
@@ -40,18 +38,19 @@ type body struct {
 	colliding map[pixel.Vec]Collidable
 
 	// anim
-	sheet   pixel.Picture
-	anims   map[string][]pixel.Rect
-	rate    float64
-	state   gopherAnimationState
-	counter float64
-	dir     float64
-	frame   pixel.Rect
-	sprite  *pixel.Sprite
+	sheet    pixel.Picture
+	anims    map[string][]pixel.Rect
+	rate     float64
+	state    gopherAnimationState
+	counter  float64
+	dir      float64
+	frame    pixel.Rect
+	runFrame int
+	sprite   *pixel.Sprite
 
-	armMatrix pixel.Matrix
-	armSprite *pixel.Sprite
-	shootPos pixel.Vec
+	armMatrix        pixel.Matrix
+	armSprite        *pixel.Sprite
+	shootPos         pixel.Vec
 	shootInitialised int
 
 	rotationPoint pixel.Vec
@@ -90,10 +89,6 @@ func (gp *body) init() {
 
 		gp.armSprite = pixel.NewSprite(im, im.Bounds())
 	}
-
-	if gp.xImd == nil {
-		gp.xImd = imdraw.New(nil)
-	}
 }
 
 func (gp *body) checkCollisions(x Collidable, normal pixel.Vec) {
@@ -103,7 +98,7 @@ func (gp *body) checkCollisions(x Collidable, normal pixel.Vec) {
 	case *wall:
 		// Moving the wall box by the normal scaled gives a bit of extra leeway before the collision is considered over
 		// This makes spamming through walls more difficult, but not impossible
-		if gp.rect.Norm().Intersect(x.Rect().Moved(normal.Scaled(20)).Norm()) != pixel.R(0,0,0,0) {
+		if gp.rect.Norm().Intersect(x.Rect().Moved(normal.Scaled(20)).Norm()) != pixel.R(0, 0, 0, 0) {
 			// still collided
 		} else {
 			// no longer collided
@@ -186,8 +181,6 @@ func (gp *body) update(dt float64) {
 		newState = running
 	}
 
-	newState = running // @TODO REMOVE
-
 	if win.JustPressed(pixelgl.MouseButtonLeft) && gp.state != running {
 		newState = shooting
 		gp.shootInitialised = 10
@@ -197,7 +190,6 @@ func (gp *body) update(dt float64) {
 		newState = shooting
 		gp.shootInitialised--
 	}
-
 
 	// reset the time counter if the state changed
 	if gp.state != newState {
@@ -211,8 +203,8 @@ func (gp *body) update(dt float64) {
 		i := int(math.Floor(gp.counter / gp.rate / 2))
 		gp.frame = gp.anims["Front"][i%len(gp.anims["Front"])]
 	case running:
-		i := int(math.Floor(gp.counter / gp.rate))
-		gp.frame = gp.anims["Run"][i%len(gp.anims["Run"])]
+		gp.runFrame = int(math.Floor(gp.counter/gp.rate)) % len(gp.anims["Run"])
+		gp.frame = gp.anims["Run"][gp.runFrame]
 	case shooting:
 		gp.frame = gp.anims["Run"][1]
 	case jumping:
@@ -236,44 +228,63 @@ func (gp *body) update(dt float64) {
 		}
 	}
 
-
 	gp.updateArm(dt)
+}
+
+// bobbing is a map of how much the arm/body move up by when running
+var bobbing = map[int]float64{
+	1:  0,
+	2:  1,
+	3:  2,
+	4:  2,
+	5:  1,
+	6:  0,
+	7:  0,
+	8:  1,
+	9:  2,
+	10: 2,
+	11: 1,
+	12: 0,
 }
 
 func (gp *body) updateArm(dt float64) {
 	pb := gp.armSprite.Picture().Bounds()
-	pb.Max = pb.Max.Rotated(getMouseAngleFromCenter())
 
-	// draw arm
-	armPos := gp.rect.Center().Add(pixel.V(40, 40))
+	armPos := gp.rect.Center().Add(pixel.V(40, 32+bobbing[gp.runFrame]))
 
-	a := getMouseAngleFromCenter()
+	mouseAngleFromCenter := getMouseAngleFromCenter()
 
-	fmt.Println(a)
-/*
-	if a > 0.71 {
-		a = 0.71
-	}
-*/
+	// undo the angle correction performed by getMouseAngleFromCenter
 	if win.MousePosition().X < win.Bounds().Center().X {
-		a += math.Pi
+		mouseAngleFromCenter += math.Pi
 	}
 
+	// if we're running in the opposite way to the direction we're shooting
+	isShootingBackwards := gp.dir < 0 && win.MousePosition().X < win.Bounds().Center().X || gp.dir > 0 && win.MousePosition().X >= win.Bounds().Center().X
 
-	gp.armMatrix = pixel.IM.Moved(armPos). // move the picture to the armPos
-		ScaledXY(gp.rect.Center(), pixel.V(-gp.dir, 1)). // scale it by the direction
-		Rotated(armPos.Add(pixel.V(pb.W()/2*gp.dir + 1000, 1000)),a)
-
-
-
-	gp.rotationPoint = gp.armMatrix.Project(pixel.ZV)
-
-	// if we're running in the opposite way to the direction we're shooting, invert gp.dir here
-	if gp.dir < 0 && win.MousePosition().X < win.Bounds().Center().X || gp.dir > 0 && win.MousePosition().X >= win.Bounds().Center().X  {
-		gp.armMatrix = gp.armMatrix.ScaledXY(armPos, pixel.V(-1, 1)).Moved(pixel.V(-80, 0))
+	if gp.dir < 0 {
+		gp.rotationPoint = armPos.Add(pixel.V(pb.W()/2*gp.dir, 0))
+	} else {
+		gp.rotationPoint = armPos.Sub(pixel.V(pb.W()/2*gp.dir, 0))
 	}
 
-	gp.shootPos = gp.armMatrix.Project(pixel.ZV).Add(pixel.V(pb.W()/2, 0))
+	// move the picture to the armPos and scale it by the direction
+	gp.armMatrix = pixel.IM.Moved(armPos).ScaledXY(gp.rect.Center(), pixel.V(-gp.dir, 1))
+
+	if isShootingBackwards {
+		gp.armMatrix = gp.armMatrix.ScaledXY(armPos, pixel.V(-1, -1)).Moved(pixel.V(-80, 0))
+
+		if (mouseAngleFromCenter > math.Pi && gp.dir < 0) || (mouseAngleFromCenter < math.Pi && gp.dir > 0) {
+			// flip the arm in Y if we're in a certain angle so the arm looks correct.
+			gp.armMatrix = gp.armMatrix.ScaledXY(armPos, pixel.V(1, -1))
+		}
+	}
+
+	// rotate by the mouse angle from the center, around the calculated rotation point
+	gp.armMatrix = gp.armMatrix.Chained(pixel.IM.Rotated(gp.rotationPoint, mouseAngleFromCenter))
+
+	// shootpos is the end of the gun
+	gp.shootPos = gp.armMatrix.Project(pixel.ZV.Add(pixel.V(pb.W()/2, 2)))
 }
 
 func (gp *body) draw(t pixel.Target) {
@@ -302,15 +313,6 @@ func (gp *body) draw(t pixel.Target) {
 		Moved(gp.rect.Center()),
 	)
 	gp.imd.Draw(t)
-
-	gp.xImd.Clear()
-
-	gp.xImd.Color = colornames.Cyan
-
-	gp.xImd.Push(gp.rotationPoint)
-	gp.xImd.Push(pixel.V(0,0))
-	gp.xImd.Polygon(10)
-	gp.xImd.Draw(t)
 }
 
 func todegrees(rads float64) float64 {

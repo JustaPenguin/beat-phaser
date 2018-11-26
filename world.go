@@ -31,32 +31,40 @@ func (w *world) init() {
 	w.mainScene = imdraw.New(nil)
 	w.weather = imdraw.New(nil)
 
-	w.rooms = append(w.rooms, &room{
-		path: "images/world/rooms/room2.png",
-		walls: []*wall{
-			// outside bounds
-			{rect: pixel.R(-700, -200, 700, -190)},                              // bottom outermost wall
-			{rect: pixel.R(-710, 700, -700, -200)},                              // left outermost wall
-			{rect: pixel.R(700, 700, 710, -200)},                                // right outermost wall
-			{rect: pixel.R(-700, 690, 700, 700).Moved(wallMidpointPositionVec)}, // top outermost wall
+	w.rooms = append(w.rooms,
+		&room{
+			path: "images/world/rooms/world-layer-background-bottom.png",
+			walls: []*wall{
+				// outside bounds
+				{rect: pixel.R(-700, -200, 700, -190)},                              // bottom outermost wall
+				{rect: pixel.R(-710, 700, -700, -200)},                              // left outermost wall
+				{rect: pixel.R(700, 700, 710, -200)},                                // right outermost wall
+				{rect: pixel.R(-700, 690, 700, 700).Moved(wallMidpointPositionVec)}, // top outermost wall
 
-			// room divisors - top rooms
-			{rect: pixel.R(-10, 685, -5, 540).Moved(wallMidpointPositionVec)},    // hat room right wall
-			{rect: pixel.R(-230, 690, -165, 540).Moved(wallMidpointPositionVec)}, // outside/inside horizontal boundary (top)
-			{rect: pixel.R(-230, 310, -165, 200).Moved(wallMidpointPositionVec)}, // outside/inside horizontal boundary (bottom)
-			{rect: pixel.R(-10, 310, -5, 200).Moved(wallMidpointPositionVec)},    // hat room right wall (bottom of gap)
+				// room divisors - top rooms
+				{rect: pixel.R(-10, 685, -5, 540).Moved(wallMidpointPositionVec)},    // hat room right wall
+				{rect: pixel.R(-230, 690, -165, 540).Moved(wallMidpointPositionVec)}, // outside/inside horizontal boundary (top)
+				{rect: pixel.R(-230, 310, -165, 200).Moved(wallMidpointPositionVec)}, // outside/inside horizontal boundary (bottom)
+				{rect: pixel.R(-10, 310, -5, 200).Moved(wallMidpointPositionVec)},    // hat room right wall (bottom of gap)
 
-			// room divisors - bottom rooms
-			{rect: pixel.R(-700, 190, 0, 200).Moved(wallMidpointPositionVec)},   // horizontal room boundary to first door
-			{rect: pixel.R(140, 190, 315, 200).Moved(wallMidpointPositionVec)},  // horizontal room boundary between doors
-			{rect: pixel.R(455, 190, 700, 200).Moved(wallMidpointPositionVec)},  // horizontal room boundary to outer wall
-			{rect: pixel.R(150, 190, 160, -140).Moved(wallMidpointPositionVec)}, // vertical boundary between bottom two rooms
+				// room divisors - bottom rooms
+				{rect: pixel.R(-700, 190, 0, 200).Moved(wallMidpointPositionVec)},   // horizontal room boundary to first door
+				{rect: pixel.R(140, 190, 315, 200).Moved(wallMidpointPositionVec)},  // horizontal room boundary between doors
+				{rect: pixel.R(455, 190, 700, 200).Moved(wallMidpointPositionVec)},  // horizontal room boundary to outer wall
+				{rect: pixel.R(150, 190, 160, -140).Moved(wallMidpointPositionVec)}, // vertical boundary between bottom two rooms
+			},
 		},
-	})
-
-	w.rooms = append(w.rooms, &room{path: "images/world/rooms/world-layer-background-bottom.png"})
-	w.rooms = append(w.rooms, &room{path: "images/world/rooms/world-layer-anim.png"})
-	w.rooms = append(w.rooms, &room{path: "images/world/rooms/world-layer-background-top.png", topLayer: true})
+		&room{
+			path: "images/world/rooms/world-layer-anim.png",
+		},
+		&room{
+			path:     "images/world/rooms/world-layer-background-top.png",
+			topLayer: true,
+			walls: []*wall{
+				{rect: pixel.R(-710, 250, -620, 0)},
+			},
+		},
+	)
 
 	for _, room := range w.rooms {
 		room.init(room.path)
