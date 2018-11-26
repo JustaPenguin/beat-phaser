@@ -20,7 +20,7 @@ type weapon struct {
 	matrix    pixel.Matrix
 	parentPos pixel.Vec
 
-	imdraw    *imdraw.IMDraw
+	imdraw *imdraw.IMDraw
 
 	hitSplashes []*hitSplash
 
@@ -200,7 +200,7 @@ type hitSplash struct {
 	x    float64
 	done bool
 
-	imd *imdraw.IMDraw
+	imd   *imdraw.IMDraw
 	color color.Color
 }
 

@@ -256,7 +256,9 @@ func (gp *body) updateArm(dt float64) {
 
 	// undo the angle correction performed by getMouseAngleFromCenter
 	if win.MousePosition().X < win.Bounds().Center().X {
-		mouseAngleFromCenter += math.Pi
+		mouseAngleFromCenter += math.Pi + 0.3
+	} else {
+		mouseAngleFromCenter -= 0.3
 	}
 
 	// if we're running in the opposite way to the direction we're shooting

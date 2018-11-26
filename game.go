@@ -20,7 +20,7 @@ var (
 	win    *pixelgl.Window
 	camPos pixel.Vec
 	// Acid jazz bpm is 111.something, backed vibes is 103
-	bpm    float64 = 110.6
+	bpm float64 = 110.6
 
 	playerScore *score
 )
