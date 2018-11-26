@@ -1,13 +1,11 @@
 package main
 
 import (
-	"image/color"
-	"time"
-
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/imdraw"
 	"github.com/faiface/pixel/pixelgl"
 	"golang.org/x/image/colornames"
+	"image/color"
 )
 
 // handgun is a simple handgun-like weapon
@@ -32,10 +30,7 @@ type weapon struct {
 	matrix    pixel.Matrix
 	parentPos pixel.Vec
 
-	lastClick time.Time
 	imdraw    *imdraw.IMDraw
-
-	increment, multiplier int
 
 	hitSplashes []*hitSplash
 
@@ -44,7 +39,6 @@ type weapon struct {
 }
 
 func (w *weapon) init() {
-	w.lastClick = time.Now()
 
 	if w.imdraw == nil {
 		w.imdraw = imdraw.New(nil)
@@ -95,8 +89,6 @@ func (w *weapon) draw(t pixel.Target) {
 }
 
 func (w *weapon) update(dt float64, characterPos pixel.Vec, parentVelocity pixel.Vec) {
-	timeSinceClick := time.Since(w.lastClick).Seconds()
-
 	w.parentPos = characterPos.Add(pixel.V(5, 0))
 	w.matrix = pixel.IM.Rotated(w.points[0].Add(characterPos), getMouseAngleFromCenter())
 
@@ -105,43 +97,17 @@ func (w *weapon) update(dt float64, characterPos pixel.Vec, parentVelocity pixel
 	}
 
 	if win.JustPressed(pixelgl.MouseButtonLeft) {
-		w.lastClick = time.Now()
-
 		a := getMouseAngleFromCenter()
 
 		var c color.Color
 
-		if timeSinceClick > 60/bpm+0.05 || timeSinceClick < 60/bpm-0.05 {
-			w.increment--
-
-			if w.increment <= 0 {
-				w.multiplier--
-				w.increment = 8
-			}
-
-			if w.multiplier < 0 {
-				w.multiplier = 0
-			}
-
-			c = color.White
+		if playerScore.onBeat {
+			c = playerScore.text.Color
 		} else {
-			w.increment++
-
-			if w.increment >= 8 {
-				w.multiplier++
-				w.increment = 0
-			}
-
-			if w.multiplier > 8 {
-				w.multiplier = 8
-			}
-
-			c = randomNiceColor()
+			c = colornames.Black
 		}
 
 		w.fire(w.matrix.Project(characterPos.Add(w.points[len(w.points)-1])), a, c)
-
-		gameScore.setMultiplier(w.multiplier)
 
 		go w.pringlePhaser.play()
 	}
@@ -155,6 +121,8 @@ func (w *weapon) update(dt float64, characterPos pixel.Vec, parentVelocity pixel
 			w.hitSplashes = append(w.hitSplashes, &hitSplash{
 				pos:    laser.Rect().Center(),
 				normal: laser.splashNormal,
+
+				color: playerScore.text.Color,
 			})
 		}
 
@@ -172,10 +140,10 @@ func (w *weapon) update(dt float64, characterPos pixel.Vec, parentVelocity pixel
 		}
 	}
 
-	for _, i := range toRemove {
+	/*for _, i := range toRemove {
 		w.lasers[i].destroy()
 		w.lasers = append(w.lasers[:i], w.lasers[i+1:]...)
-	}
+	}*/
 }
 
 type laser struct {
@@ -260,6 +228,7 @@ type hitSplash struct {
 	done bool
 
 	imd *imdraw.IMDraw
+	color color.Color
 }
 
 func (h *hitSplash) init() {
@@ -279,7 +248,7 @@ func (h *hitSplash) draw(imd *imdraw.IMDraw) {
 		imd = imdraw.New(nil)
 	}
 
-	imd.Color = pixel.RGB(1, 1, 1)
+	imd.Color = h.color
 
 	imd.Push(pixel.V(h.pos.X+h.x, h.pos.Y))
 	imd.Push(pixel.V(h.pos.X, h.pos.Y+h.x))
