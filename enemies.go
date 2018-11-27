@@ -9,8 +9,8 @@ import (
 type enemiesCollection struct {
 	enemies []*enemy
 
-	counter float64
-	step    float64
+	counter    float64
+	step       float64
 	difficulty float64
 
 	img pixel.Picture
@@ -27,8 +27,8 @@ func (e *enemiesCollection) init() {
 	e.enemies = append(e.enemies, &enemy{
 		initialPos: pixel.Vec{X: 0, Y: 0},
 		moveSpeed:  2,
-		health: 100,
-		maxHealth: 100,
+		health:     100,
+		maxHealth:  100,
 
 		rect: pixel.R(-84, -74, 84, 74),
 
@@ -66,8 +66,8 @@ func (e *enemiesCollection) update(dt float64, targetPos pixel.Vec) {
 			enemy := &enemy{
 				initialPos: pixel.Vec{X: 0, Y: 0},
 				moveSpeed:  2,
-				health: math.Round(e.difficulty/10)*10,  // health is nearest 20 to difficulty
-				maxHealth: math.Round(e.difficulty/10)*10,
+				health:     math.Round(e.difficulty/10) * 10, // health is nearest 20 to difficulty
+				maxHealth:  math.Round(e.difficulty/10) * 10,
 
 				rect: pixel.R(-84, -74, 84, 74),
 
@@ -107,9 +107,9 @@ type enemy struct {
 	vel       pixel.Vec
 	moveSpeed float64
 
-	rect pixel.Rect
+	rect              pixel.Rect
 	health, maxHealth float64
-	ded  bool
+	ded               bool
 
 	initialPos pixel.Vec // Used for lerp, left just in case
 	midPoint   pixel.Vec
@@ -230,7 +230,7 @@ func (e *enemy) update(dt float64, targetPos pixel.Vec) {
 }
 
 func (e *enemy) draw(t pixel.Target) {
-	h := e.health/e.maxHealth
+	h := e.health / e.maxHealth
 
 	e.sprite.DrawColorMask(t, pixel.IM.Moved(e.rect.Center()), pixel.RGB(h, h, h))
 }
