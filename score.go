@@ -83,9 +83,6 @@ func (s *score) init() {
 		[]rune{'0', '1', '2', '3', '4', '5', '6', '7', '8', 'x'},
 	)
 
-	// start the current track
-	go s.audio.play(s.audioCh)
-
 	go func() {
 		for {
 			select {
@@ -94,6 +91,9 @@ func (s *score) init() {
 			}
 		}
 	}()
+
+	// start the current track
+	go s.audio.play(s.audioCh)
 }
 
 func (s *score) update() {
