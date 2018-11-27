@@ -58,7 +58,7 @@ func (w *world) init() {
 	})
 
 	w.rooms = append(w.rooms, &room{path: "/world-layer-background-top", topLayer: true, walls: []*wall{
-		{rect: pixel.R(-710, 250, -620, 0)},
+		{rect: pixel.R(-710, 250, -620, 150)}, // plant
 	}})
 	w.rooms = append(w.rooms, &room{path: "/world-layer-animation", animLayer: true, rate: 1.0 / 10})
 
@@ -156,19 +156,19 @@ func (r *rain) draw(imd *imdraw.IMDraw) {
 }
 
 type room struct {
-	topLayer, animLayer  bool
-	path      string
-	drawnRoom *imdraw.IMDraw
-	walls     []*wall
+	topLayer, animLayer bool
+	path                string
+	drawnRoom           *imdraw.IMDraw
+	walls               []*wall
 
 	img    pixel.Picture
 	imd    *imdraw.IMDraw
 	sprite *pixel.Sprite
 
 	//anim
-	sheet   pixel.Picture
-	anims   map[string][]pixel.Rect
-	frame   pixel.Rect
+	sheet         pixel.Picture
+	anims         map[string][]pixel.Rect
+	frame         pixel.Rect
 	counter, rate float64
 }
 
@@ -237,7 +237,7 @@ func (r *room) animDraw(t pixel.Target) {
 }
 
 func loadPicture(path string) (pixel.Picture, error) {
-	file, err := os.Open(path+".png")
+	file, err := os.Open(path + ".png")
 	if err != nil {
 		return nil, err
 	}

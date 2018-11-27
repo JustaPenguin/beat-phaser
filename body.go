@@ -69,7 +69,7 @@ func (gp *body) init() {
 
 	if gp.sheet == nil || gp.anims == nil {
 		var err error
-		
+
 		gp.sheet, gp.anims, err = loadAnimationSheet("spike", 104, filepath.Join("images", "sprites"))
 
 		if err != nil {
