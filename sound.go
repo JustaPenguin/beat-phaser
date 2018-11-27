@@ -2,6 +2,7 @@ package main
 
 import (
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/faiface/beep"
@@ -10,6 +11,12 @@ import (
 	"github.com/faiface/beep/speaker"
 	"github.com/faiface/beep/vorbis"
 )
+
+var acidJazzAudio = &audio{
+	filepath: filepath.Join("audio", "tracks", "Kevin_MacLeod_-_AcidJazz.mp3"),
+	loop:     -1,
+	bpm:      110.724, // Acid jazz bpm is 111.something, backed vibes is 103
+}
 
 type soundEffect struct {
 	filePath string
@@ -54,84 +61,93 @@ func (s *soundEffect) play() {
 	})))
 }
 
-func loadAudio() {
-	f1, err := os.Open("audio/tracks/Kevin_MacLeod_-_AcidJazz.mp3")
+type audio struct {
+	filepath string
+	loop     int
+	bpm      float64
+
+	streamer beep.StreamSeekCloser
+	format   beep.Format
+	file     *os.File
+}
+
+func (a *audio) load() error {
+	var err error
+	a.file, err = os.Open(a.filepath)
+
+	if err != nil {
+		return err
+	}
+
+	s1, format, err := mp3.Decode(a.file)
+
+	if err != nil {
+		return err
+	}
+
+	a.streamer = s1
+	a.format = format
+
+	return nil
+}
+
+func (a *audio) play(ch chan time.Time) {
+	err := speaker.Init(a.format.SampleRate, a.format.SampleRate.N(time.Second/10))
 
 	if err != nil {
 		panic(err)
 	}
-
-	s1, format, err := mp3.Decode(f1)
-
-	if err != nil {
-		panic(err)
-	}
-
-	err = speaker.Init(format.SampleRate, format.SampleRate.N(time.Second/10))
-
-	if err != nil {
-		panic(err)
-	}
-
+loop:
 	playing := make(chan struct{})
 
-	songVolume := effects.Volume{
-		Streamer: Loop(-1, s1, func() {
-			playerScore.startTime = time.Now()
-		}),
-		Base:   2,
-		Volume: -3,
-		Silent: false,
+	err = a.streamer.Seek(0)
+
+	if err != nil {
+		panic(err)
 	}
 
-	speaker.Play(beep.Seq(&songVolume, beep.Callback(func() {
+	songVolume := effects.Volume{
+		Streamer: a.streamer,
+		Base:     2,
+		Volume:   -3,
+		Silent:   false,
+	}
+
+	sns := &startedNowStreamer{ch: ch}
+
+	speaker.Play(sns, beep.Seq(&songVolume, beep.Callback(func() {
 		close(playing)
 	})))
+
 	<-playing
-}
 
-func Loop(count int, s beep.StreamSeeker, cb func()) beep.Streamer {
-	return &loopCallback{
-		s:        s,
-		remains:  count,
-		callback: cb,
+	if a.loop != 0 {
+		a.loop--
+		goto loop
 	}
 }
 
-type loopCallback struct {
-	s        beep.StreamSeeker
-	remains  int
-	callback func()
+func (a *audio) close() error {
+	err := a.streamer.Close()
+
+	if err != nil {
+		return err
+	}
+
+	return a.file.Close()
 }
 
-func (l *loopCallback) Stream(samples [][2]float64) (n int, ok bool) {
-	if l.remains == 0 || l.s.Err() != nil {
-		return 0, false
-	}
-	for len(samples) > 0 {
-		sn, sok := l.s.Stream(samples)
-		if !sok {
-
-			if l.remains == 0 {
-				break
-			}
-			err := l.s.Seek(0)
-			if err != nil {
-				return n, true
-			}
-			if l.remains > 0 {
-				l.remains--
-			}
-
-			l.callback()
-			continue
-		}
-		samples = samples[sn:]
-		n += sn
-	}
-	return n, true
+// startedNowStreamer passes a time.Now() down a channel when the streaming begins.
+type startedNowStreamer struct {
+	ch chan time.Time
 }
 
-func (l *loopCallback) Err() error {
-	return l.s.Err()
+func (s *startedNowStreamer) Stream(samples [][2]float64) (n int, ok bool) {
+	s.ch <- time.Now()
+
+	return 0, false
+}
+
+func (s *startedNowStreamer) Err() error {
+	return nil
 }

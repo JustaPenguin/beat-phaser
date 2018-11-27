@@ -19,8 +19,6 @@ func init() {
 var (
 	win    *pixelgl.Window
 	camPos pixel.Vec
-	// Acid jazz bpm is 111.something, backed vibes is 103
-	bpm float64 = 110.6
 
 	playerScore *score
 )
@@ -131,7 +129,6 @@ func (g *game) run() {
 	*/
 
 	frameLimit := time.Tick(time.Second / 144)
-	go loadAudio()
 
 	for !win.Closed() {
 		dt := time.Since(last).Seconds()
