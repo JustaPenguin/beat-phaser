@@ -121,9 +121,11 @@ loop:
 		Silent:   false,
 	}
 
-	sns := &startedNowStreamer{ch: ch}
+	go func() {
+		ch <- time.Now()
+	}()
 
-	speaker.Play(sns, beep.Seq(&songVolume, beep.Callback(func() {
+	speaker.Play(beep.Seq(&songVolume, beep.Callback(func() {
 		close(playing)
 	})))
 
@@ -143,19 +145,4 @@ func (a *audio) close() error {
 	}
 
 	return a.file.Close()
-}
-
-// startedNowStreamer passes a time.Now() down a channel when the streaming begins.
-type startedNowStreamer struct {
-	ch chan time.Time
-}
-
-func (s *startedNowStreamer) Stream(samples [][2]float64) (n int, ok bool) {
-	s.ch <- time.Now()
-
-	return 0, false
-}
-
-func (s *startedNowStreamer) Err() error {
-	return nil
 }

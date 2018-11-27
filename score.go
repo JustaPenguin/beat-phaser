@@ -89,7 +89,7 @@ func (s *score) init() {
 		for {
 			select {
 			case t := <-s.audioCh:
-				s.startTime = t
+				s.startTime = t.Add(time.Nanosecond * 27000000)
 			}
 		}
 	}()
