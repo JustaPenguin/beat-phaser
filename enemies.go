@@ -17,7 +17,7 @@ type enemiesCollection struct {
 func (e *enemiesCollection) init() {
 	var err error
 
-	e.img, err = loadPicture("images/sprites/reaper.png")
+	e.img, err = loadPicture("images/sprites/reaper")
 	if err != nil {
 		panic(err)
 	}

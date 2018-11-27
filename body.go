@@ -1,11 +1,12 @@
 package main
 
 import (
-	"math"
-
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/imdraw"
 	"github.com/faiface/pixel/pixelgl"
+
+	"math"
+	"path/filepath"
 )
 
 type gopherAnimationState int
@@ -68,8 +69,8 @@ func (gp *body) init() {
 
 	if gp.sheet == nil || gp.anims == nil {
 		var err error
-
-		gp.sheet, gp.anims, err = loadAnimationSheet("spike", 104)
+		
+		gp.sheet, gp.anims, err = loadAnimationSheet("spike", 104, filepath.Join("images", "sprites"))
 
 		if err != nil {
 			panic(err)
@@ -81,7 +82,7 @@ func (gp *body) init() {
 	}
 
 	if gp.armSprite == nil {
-		im, err := loadPicture("images/sprites/arm.png")
+		im, err := loadPicture("images/sprites/arm")
 
 		if err != nil {
 			panic(err)
