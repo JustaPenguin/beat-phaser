@@ -99,7 +99,6 @@ func run() {
 	win, err = pixelgl.NewWindow(pixelgl.WindowConfig{
 		Title:  "Beat Phaser",
 		Bounds: pixel.R(0, 0, 1920, 1080),
-		VSync:  true,
 	})
 
 	if err != nil {

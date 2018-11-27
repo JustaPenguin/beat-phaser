@@ -58,7 +58,7 @@ func (w *world) init() {
 	})
 
 	w.rooms = append(w.rooms, &room{path: "/world-layer-background-top", topLayer: true, walls: []*wall{
-		{rect: pixel.R(-710, 250, -620, 0)},
+		{rect: pixel.R(-710, 250, -620, 150)}, // plant
 	}})
 	w.rooms = append(w.rooms, &room{path: "/world-layer-animation", animLayer: true, rate: 1.0 / 10})
 

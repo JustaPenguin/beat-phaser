@@ -18,6 +18,9 @@ type score struct {
 	startTime          time.Time
 	timeWindow, onBeat bool
 
+	audio   *audio
+	audioCh chan time.Time
+
 	atlas *text.Atlas
 	text  *text.Text
 }
@@ -60,7 +63,21 @@ func (s *score) draw() {
 }
 
 func (s *score) init() {
+
 	s.multiplier = 1
+
+	// change audio track here
+	track := acidJazzAudio
+
+	err := track.load()
+
+	if err != nil {
+		panic(err)
+	}
+
+	s.audio = track
+	s.audioCh = make(chan time.Time)
+
 	s.pos = pixel.V(20, 20)
 
 	s.atlas = text.NewAtlas(
@@ -68,12 +85,22 @@ func (s *score) init() {
 		[]rune{'0', '1', '2', '3', '4', '5', '6', '7', '8', 'x'},
 	)
 
-	s.startTime = time.Now()
+	go func() {
+		for {
+			select {
+			case t := <-s.audioCh:
+				s.startTime = t
+			}
+		}
+	}()
+
+	// start the current track
+	go s.audio.play(s.audioCh)
 }
 
 func (s *score) update() {
 	// If time is within 10ms of the bpm (from start time)
-	timeSince := (time.Now().UnixNano() - s.startTime.UnixNano()) % (int64(60000000000 / bpm))
+	timeSince := (time.Now().UnixNano() - s.startTime.UnixNano()) % (int64(60000000000 / s.audio.bpm))
 	if timeSince <= 100000000 || timeSince >= 400000000 {
 		s.timeWindow = true
 	} else {
@@ -108,7 +135,5 @@ func (s *score) update() {
 				s.multiplier = 1
 			}
 		}
-
 	}
-
 }
