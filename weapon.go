@@ -46,6 +46,7 @@ func (w *weapon) fire(origin pixel.Vec, angle float64, color color.Color) {
 	l := &laser{
 		color:     color,
 		velocity:  pixel.V(w.speed, 0).Rotated(angle),
+		damage:    float64(100*playerScore.multiplier),
 		pos:       origin,
 		thickness: 10,
 	}
@@ -124,6 +125,8 @@ type laser struct {
 	color        color.Color
 	velocity     pixel.Vec
 	lastVelocity pixel.Vec
+
+	damage float64
 
 	pos pixel.Vec
 

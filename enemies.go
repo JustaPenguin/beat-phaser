@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/imdraw"
+	"math"
 )
 
 type enemiesCollection struct {
@@ -10,6 +11,7 @@ type enemiesCollection struct {
 
 	counter float64
 	step    float64
+	difficulty float64
 
 	img pixel.Picture
 }
@@ -25,6 +27,8 @@ func (e *enemiesCollection) init() {
 	e.enemies = append(e.enemies, &enemy{
 		initialPos: pixel.Vec{X: 0, Y: 0},
 		moveSpeed:  2,
+		health: 100,
+		maxHealth: 100,
 
 		rect: pixel.R(-84, -74, 84, 74),
 
@@ -36,6 +40,7 @@ func (e *enemiesCollection) init() {
 	})
 
 	e.step = 2
+	e.difficulty = 100
 
 	for i := range e.enemies {
 		e.enemies[i].init()
@@ -48,6 +53,8 @@ func (e *enemiesCollection) update(dt float64, targetPos pixel.Vec) {
 	for i := len(e.enemies) - 1; i >= 0; i-- {
 		// If enemy is ded remove from slice
 		if e.enemies[i].ded {
+			// For every ded enemy difficulty increases
+			e.difficulty += 20
 			e.enemies = e.enemies[:i+copy(e.enemies[i:], e.enemies[i+1:])]
 		}
 	}
@@ -59,6 +66,8 @@ func (e *enemiesCollection) update(dt float64, targetPos pixel.Vec) {
 			enemy := &enemy{
 				initialPos: pixel.Vec{X: 0, Y: 0},
 				moveSpeed:  2,
+				health: math.Round(e.difficulty/10)*10,  // health is nearest 20 to difficulty
+				maxHealth: math.Round(e.difficulty/10)*10,
 
 				rect: pixel.R(-84, -74, 84, 74),
 
@@ -99,6 +108,7 @@ type enemy struct {
 	moveSpeed float64
 
 	rect pixel.Rect
+	health, maxHealth float64
 	ded  bool
 
 	initialPos pixel.Vec // Used for lerp, left just in case
@@ -121,9 +131,14 @@ func (e *enemy) Vel() pixel.Vec {
 }
 
 func (e *enemy) HandleCollision(x Collidable, collisionTime float64, normal pixel.Vec) {
-	switch x.(type) {
+	switch collidable := x.(type) {
 	case *laser:
-		e.die() //for now, later maybe decrease health
+
+		e.health -= collidable.damage
+
+		if e.health <= 0 {
+			e.die()
+		}
 	case *wall, *character, *enemy:
 		e.stopMotionCollision(collisionTime, normal)
 	}
@@ -215,5 +230,7 @@ func (e *enemy) update(dt float64, targetPos pixel.Vec) {
 }
 
 func (e *enemy) draw(t pixel.Target) {
-	e.sprite.Draw(t, pixel.IM.Moved(e.rect.Center()))
+	h := e.health/e.maxHealth
+
+	e.sprite.DrawColorMask(t, pixel.IM.Moved(e.rect.Center()), pixel.RGB(h, h, h))
 }
