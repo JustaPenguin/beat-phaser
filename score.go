@@ -35,7 +35,7 @@ func (s *score) draw() {
 	// @TODO colours for scores, perhaps a little animated multi tone stuff for big ones
 	switch s.multiplier {
 	case 0:
-		s.text.Color = colornames.White
+		s.multiplier = 1
 	case 1:
 		s.text.Color = colornames.Aqua
 	case 2:
@@ -63,6 +63,9 @@ func (s *score) draw() {
 }
 
 func (s *score) init() {
+
+	s.multiplier = 1
+
 	// change audio track here
 	track := acidJazzAudio
 
@@ -75,7 +78,6 @@ func (s *score) init() {
 	s.audio = track
 	s.audioCh = make(chan time.Time)
 
-	s.multiplier = 0
 	s.pos = pixel.V(20, 20)
 
 	s.atlas = text.NewAtlas(
@@ -129,8 +131,8 @@ func (s *score) update() {
 				s.increment = 8
 			}
 
-			if s.multiplier < 0 {
-				s.multiplier = 0
+			if s.multiplier < 1 {
+				s.multiplier = 1
 			}
 		}
 	}
