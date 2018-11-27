@@ -12,11 +12,19 @@ import (
 	"github.com/faiface/beep/vorbis"
 )
 
-var acidJazzAudio = &audio{
-	filepath: filepath.Join("audio", "tracks", "Kevin_MacLeod_-_AcidJazz.mp3"),
-	loop:     -1,
-	bpm:      110.724, // Acid jazz bpm is 111.something, backed vibes is 103
-}
+var (
+	acidJazzAudio = &audio{
+		filepath: filepath.Join("audio", "tracks", "Kevin_MacLeod_-_AcidJazz.mp3"),
+		loop:     -1,
+		bpm:      110.724,
+	}
+
+	backedVibesAudio = &audio{
+		filepath: filepath.Join("audio", "tracks", "Kevin_MacLeod_Backed_Vibes_Clean.mp3"),
+		loop:     -1,
+		bpm:      102.230,
+	}
+)
 
 type soundEffect struct {
 	filePath string

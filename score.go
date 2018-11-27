@@ -63,13 +63,16 @@ func (s *score) draw() {
 }
 
 func (s *score) init() {
-	err := acidJazzAudio.load()
+	// change audio track here
+	track := acidJazzAudio
+
+	err := track.load()
 
 	if err != nil {
 		panic(err)
 	}
 
-	s.audio = acidJazzAudio
+	s.audio = track
 	s.audioCh = make(chan time.Time)
 
 	s.multiplier = 0
