@@ -15,9 +15,7 @@ import (
 	"github.com/faiface/pixel/pixelgl"
 )
 
-var sheetBasePath = filepath.Join("images", "sprites")
-
-func loadAnimationSheet(name string, frameWidth float64) (sheet pixel.Picture, anims map[string][]pixel.Rect, err error) {
+func loadAnimationSheet(name string, frameWidth float64, sheetBasePath string) (sheet pixel.Picture, anims map[string][]pixel.Rect, err error) {
 	// open and load the spritesheet
 	sheetFile, err := os.Open(filepath.Join(sheetBasePath, name+".png"))
 

@@ -4,8 +4,10 @@ import (
 	"golang.org/x/image/colornames"
 	"image"
 	"image/color"
+	"math"
 	"math/rand"
 	"os"
+	"path/filepath"
 
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/imdraw"
@@ -32,40 +34,33 @@ func (w *world) init() {
 	w.mainScene = imdraw.New(nil)
 	w.weather = imdraw.New(nil)
 
-	w.rooms = append(w.rooms,
-		&room{
-			path: "images/world/rooms/world-layer-background-bottom.png",
-			walls: []*wall{
-				// outside bounds
-				{rect: pixel.R(-700, -200, 700, -190)},                              // bottom outermost wall
-				{rect: pixel.R(-710, 700, -700, -200)},                              // left outermost wall
-				{rect: pixel.R(700, 700, 710, -200)},                                // right outermost wall
-				{rect: pixel.R(-700, 690, 700, 700).Moved(wallMidpointPositionVec)}, // top outermost wall
+	w.rooms = append(w.rooms, &room{
+		path: "/world-layer-background-bottom",
+		walls: []*wall{
+			// outside bounds
+			{rect: pixel.R(-700, -200, 700, -190)},                              // bottom outermost wall
+			{rect: pixel.R(-710, 700, -700, -200)},                              // left outermost wall
+			{rect: pixel.R(700, 700, 710, -200)},                                // right outermost wall
+			{rect: pixel.R(-700, 690, 700, 700).Moved(wallMidpointPositionVec)}, // top outermost wall
 
-				// room divisors - top rooms
-				{rect: pixel.R(-10, 685, -5, 540).Moved(wallMidpointPositionVec)},    // hat room right wall
-				{rect: pixel.R(-230, 690, -165, 540).Moved(wallMidpointPositionVec)}, // outside/inside horizontal boundary (top)
-				{rect: pixel.R(-230, 310, -165, 200).Moved(wallMidpointPositionVec)}, // outside/inside horizontal boundary (bottom)
-				{rect: pixel.R(-10, 310, -5, 200).Moved(wallMidpointPositionVec)},    // hat room right wall (bottom of gap)
+			// room divisors - top rooms
+			{rect: pixel.R(-10, 685, -5, 540).Moved(wallMidpointPositionVec)},    // hat room right wall
+			{rect: pixel.R(-230, 690, -165, 540).Moved(wallMidpointPositionVec)}, // outside/inside horizontal boundary (top)
+			{rect: pixel.R(-230, 310, -165, 200).Moved(wallMidpointPositionVec)}, // outside/inside horizontal boundary (bottom)
+			{rect: pixel.R(-10, 310, -5, 200).Moved(wallMidpointPositionVec)},    // hat room right wall (bottom of gap)
 
-				// room divisors - bottom rooms
-				{rect: pixel.R(-700, 190, 0, 200).Moved(wallMidpointPositionVec)},   // horizontal room boundary to first door
-				{rect: pixel.R(140, 190, 315, 200).Moved(wallMidpointPositionVec)},  // horizontal room boundary between doors
-				{rect: pixel.R(455, 190, 700, 200).Moved(wallMidpointPositionVec)},  // horizontal room boundary to outer wall
-				{rect: pixel.R(150, 190, 160, -140).Moved(wallMidpointPositionVec)}, // vertical boundary between bottom two rooms
-			},
+			// room divisors - bottom rooms
+			{rect: pixel.R(-700, 190, 0, 200).Moved(wallMidpointPositionVec)},   // horizontal room boundary to first door
+			{rect: pixel.R(140, 190, 315, 200).Moved(wallMidpointPositionVec)},  // horizontal room boundary between doors
+			{rect: pixel.R(455, 190, 700, 200).Moved(wallMidpointPositionVec)},  // horizontal room boundary to outer wall
+			{rect: pixel.R(150, 190, 160, -140).Moved(wallMidpointPositionVec)}, // vertical boundary between bottom two rooms
 		},
-		&room{
-			path: "images/world/rooms/world-layer-anim.png",
-		},
-		&room{
-			path:     "images/world/rooms/world-layer-background-top.png",
-			topLayer: true,
-			walls: []*wall{
-				{rect: pixel.R(-710, 250, -620, 0)},
-			},
-		},
-	)
+	})
+
+	w.rooms = append(w.rooms, &room{path: "/world-layer-background-top", topLayer: true, walls: []*wall{
+		{rect: pixel.R(-710, 250, -620, 0)},
+	}})
+	w.rooms = append(w.rooms, &room{path: "/world-layer-animation", animLayer: true, rate: 1.0 / 10})
 
 	for _, room := range w.rooms {
 		room.init(room.path)
@@ -86,6 +81,12 @@ func (w *world) update(dt float64) {
 	w.rain.update(w.character.body.rect.Center().Y-win.Bounds().Max.Y/2, w.character.body.rect.Center().Y+win.Bounds().Max.Y/2)
 	w.character.update(dt)
 	w.enemies.update(dt, w.character.body.rect.Center())
+
+	for _, room := range w.rooms {
+		if room.animLayer {
+			room.update(dt)
+		}
+	}
 }
 
 func (w *world) draw(t pixel.Target) {
@@ -93,8 +94,10 @@ func (w *world) draw(t pixel.Target) {
 	w.weather.Clear()
 
 	for _, room := range w.rooms {
-		if !room.topLayer {
+		if !room.topLayer && !room.animLayer {
 			room.drawnRoom.Draw(t)
+		} else if room.animLayer {
+			room.animDraw(t)
 		}
 	}
 
@@ -102,7 +105,7 @@ func (w *world) draw(t pixel.Target) {
 	w.enemies.draw(t)
 
 	for _, room := range w.rooms {
-		if room.topLayer {
+		if room.topLayer && !room.animLayer {
 			room.drawnRoom.Draw(t)
 		}
 	}
@@ -153,7 +156,7 @@ func (r *rain) draw(imd *imdraw.IMDraw) {
 }
 
 type room struct {
-	topLayer  bool
+	topLayer, animLayer  bool
 	path      string
 	drawnRoom *imdraw.IMDraw
 	walls     []*wall
@@ -161,26 +164,55 @@ type room struct {
 	img    pixel.Picture
 	imd    *imdraw.IMDraw
 	sprite *pixel.Sprite
+
+	//anim
+	sheet   pixel.Picture
+	anims   map[string][]pixel.Rect
+	frame   pixel.Rect
+	counter, rate float64
 }
 
 func (r *room) init(path string) {
-	var err error
+	if r.animLayer {
+		var err error
 
-	r.img, err = loadPicture(path)
-	if err != nil {
-		panic(err)
+		r.sheet, r.anims, err = loadAnimationSheet("world-layer-animation", 1400, filepath.Join("images", "world", "rooms"))
+
+		if err != nil {
+			panic(err)
+		}
+
+		r.imd = imdraw.New(r.sheet)
+
+		r.sprite = pixel.NewSprite(nil, pixel.Rect{})
 	}
-
-	r.imd = imdraw.New(nil)
 
 	for _, wall := range r.walls {
 		wall.init()
 	}
 
-	r.sprite = pixel.NewSprite(r.img, r.img.Bounds())
+	if !r.animLayer {
+		var err error
 
-	r.drawnRoom = imdraw.New(r.img)
-	r.draw(r.drawnRoom)
+		r.img, err = loadPicture(filepath.Join("images", "world", "rooms") + path)
+		if err != nil {
+			panic(err)
+		}
+
+		r.sprite = pixel.NewSprite(r.img, r.img.Bounds())
+		r.drawnRoom = imdraw.New(r.img)
+
+		r.imd = imdraw.New(nil)
+
+		r.draw(r.drawnRoom)
+	}
+}
+
+func (r *room) update(dt float64) {
+	r.counter += dt
+
+	i := int(math.Floor(r.counter / r.rate / 2))
+	r.frame = r.anims["Norm"][i%len(r.anims["Norm"])]
 }
 
 func (r *room) draw(t pixel.Target) {
@@ -196,8 +228,16 @@ func (r *room) draw(t pixel.Target) {
 	r.imd.Draw(t)
 }
 
+func (r *room) animDraw(t pixel.Target) {
+	r.imd.Clear()
+	r.sprite.Set(r.sheet, r.frame)
+	r.sprite.Draw(r.imd, pixel.IM)
+
+	r.imd.Draw(t)
+}
+
 func loadPicture(path string) (pixel.Picture, error) {
-	file, err := os.Open(path)
+	file, err := os.Open(path+".png")
 	if err != nil {
 		return nil, err
 	}
