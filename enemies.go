@@ -4,6 +4,7 @@ import (
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/imdraw"
 	"math"
+	"path/filepath"
 )
 
 type enemiesCollection struct {
@@ -124,6 +125,12 @@ type enemy struct {
 	img    pixel.Picture
 	imd    *imdraw.IMDraw
 	sprite *pixel.Sprite
+
+	//anim
+	sheet pixel.Picture
+	frame pixel.Rect
+	anims map[string][]pixel.Rect
+	rate, animCounter, dir float64
 }
 
 func (e *enemy) Vel() pixel.Vec {
@@ -172,14 +179,28 @@ func (e *enemy) init() {
 	defer registerCollidable(e)
 
 	e.step = 1
+	e.rate = 1.0 / 10
 
-	e.sprite = pixel.NewSprite(e.img, e.img.Bounds())
+	var err error
 
-	e.imd = imdraw.New(e.img)
-	e.draw(e.imd)
+	e.sheet, e.anims, err = loadAnimationSheet("reaper", 168, filepath.Join("images", "sprites"))
+
+	if err != nil {
+		panic(err)
+	}
+
+	e.imd = imdraw.New(e.sheet)
+
+	e.sprite = pixel.NewSprite(nil, pixel.Rect{})
 }
 
 func (e *enemy) update(dt float64, targetPos pixel.Vec) {
+	e.animCounter += dt
+
+	// @TODO attacking animation
+	i := int(math.Floor(e.counter / e.rate / 2))
+	e.frame = e.anims["Norm"][i%len(e.anims["Norm"])]
+
 	e.counter += dt
 
 	// If we reached the target assign a new one (updated character position) OLD LERPING CODE
@@ -234,6 +255,9 @@ func (e *enemy) update(dt float64, targetPos pixel.Vec) {
 
 func (e *enemy) draw(t pixel.Target) {
 	h := e.health / e.maxHealth
+
+	e.imd.Clear()
+	e.sprite.Set(e.sheet, e.frame)
 
 	e.sprite.DrawColorMask(t, pixel.IM.Moved(e.rect.Center()), pixel.RGB(h, h, h))
 }
