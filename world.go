@@ -16,6 +16,7 @@ import (
 type world struct {
 	character *character
 	enemies   *enemiesCollection
+	advert *advert
 
 	rain  *rain
 	rooms []*room
@@ -33,6 +34,12 @@ func (w *world) init() {
 	w.enemies.init()
 	w.mainScene = imdraw.New(nil)
 	w.weather = imdraw.New(nil)
+
+	w.advert = &advert{
+		pos: pixel.V(-440, 155),
+		maxWidth: 45,
+	}
+	w.advert.init()
 
 	w.rooms = append(w.rooms, &room{
 		path: "/world-layer-background-bottom",
@@ -81,6 +88,7 @@ func (w *world) update(dt float64) {
 	w.rain.update(w.character.body.rect.Center().Y-win.Bounds().Max.Y/2, w.character.body.rect.Center().Y+win.Bounds().Max.Y/2)
 	w.character.update(dt)
 	w.enemies.update(dt, w.character.body.rect.Center())
+	w.advert.update(dt)
 
 	for _, room := range w.rooms {
 		if room.animLayer {
@@ -116,6 +124,7 @@ func (w *world) draw(t pixel.Target) {
 
 	w.weather.Draw(t)
 	w.mainScene.Draw(t)
+	w.advert.draw(t)
 }
 
 type rain struct {
