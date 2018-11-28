@@ -41,13 +41,15 @@ func (w *world) init() {
 	}
 	w.advert.init()
 
+	// House layers
 	w.rooms = append(w.rooms, &room{
 		path: "/world-layer-background-bottom",
 		walls: []*wall{
 			// outside bounds
 			{rect: pixel.R(-700, -200, 700, -190)},                              // bottom outermost wall
 			{rect: pixel.R(-710, 700, -700, -200)},                              // left outermost wall
-			{rect: pixel.R(700, 700, 710, -200)},                                // right outermost wall
+			{rect: pixel.R(700, 340, 710, -200)}, 								// right outermost wall
+			{rect: pixel.R(700, 700, 710, 580)},
 			{rect: pixel.R(-700, 690, 700, 700).Moved(wallMidpointPositionVec)}, // top outermost wall
 
 			// room divisors - top rooms
@@ -68,6 +70,19 @@ func (w *world) init() {
 		{rect: pixel.R(-710, 250, -620, 150)}, // plant
 	}})
 	w.rooms = append(w.rooms, &room{path: "/world-layer-animation", animLayer: true, rate: 1.0 / 10})
+
+	// Wall with stairs layers
+	w.rooms = append(w.rooms, &room{path: "/wall-stairs-layer-background-bottom", offset: pixel.V(1400, 0)})
+	w.rooms = append(w.rooms, &room{path: "/wall-stairs-layer-background-top", offset: pixel.V(1400, 0), topLayer: true})
+
+	// Wall layers
+	w.rooms = append(w.rooms, &room{path: "/wall-layer-background-bottom", offset: pixel.V(-1400, 0)})
+	w.rooms = append(w.rooms, &room{path: "/wall-layer-background-top", offset: pixel.V(-1400, 0), topLayer: true})
+
+	// Street layers
+	w.rooms = append(w.rooms, &room{path: "/street-base", offset: pixel.V(0, -1400)})
+	w.rooms = append(w.rooms, &room{path: "/street-base", offset: pixel.V(1400, -1400)})
+	w.rooms = append(w.rooms, &room{path: "/street-base", offset: pixel.V(-1400, -1400)})
 
 	for _, room := range w.rooms {
 		room.init(room.path)
@@ -173,6 +188,7 @@ type room struct {
 	img    pixel.Picture
 	imd    *imdraw.IMDraw
 	sprite *pixel.Sprite
+	offset pixel.Vec
 
 	//anim
 	sheet         pixel.Picture
@@ -226,7 +242,7 @@ func (r *room) update(dt float64) {
 
 func (r *room) draw(t pixel.Target) {
 	//r.image.Draw(t, pixel.IM.Scaled(r.image.Frame().Center(), 2.5))
-	r.sprite.Draw(t, pixel.IM)
+	r.sprite.Draw(t, pixel.IM.Moved(r.offset))
 
 	r.imd.Clear()
 
