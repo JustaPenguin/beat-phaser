@@ -1,12 +1,12 @@
 package main
 
 import (
+	"math"
+	"path/filepath"
+
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/imdraw"
 	"github.com/faiface/pixel/pixelgl"
-
-	"math"
-	"path/filepath"
 )
 
 type gopherAnimationState int
@@ -23,8 +23,6 @@ const (
 	downNormal  string = "down"
 )
 
-var normalMap map[string]pixel.Vec
-
 type body struct {
 	imd *imdraw.IMDraw
 
@@ -35,8 +33,6 @@ type body struct {
 
 	rect pixel.Rect
 	vel  pixel.Vec
-
-	colliding map[pixel.Vec]Collidable
 
 	// anim
 	sheet    pixel.Picture
@@ -58,15 +54,6 @@ type body struct {
 }
 
 func (gp *body) init() {
-	if normalMap == nil {
-		normalMap = make(map[string]pixel.Vec)
-
-		normalMap[leftNormal] = pixel.V(1, 0)
-		normalMap[rightNormal] = pixel.V(-1, 0)
-		normalMap[upNormal] = pixel.V(0, -1)
-		normalMap[downNormal] = pixel.V(0, 1)
-	}
-
 	if gp.sheet == nil || gp.anims == nil {
 		var err error
 
@@ -75,10 +62,6 @@ func (gp *body) init() {
 		if err != nil {
 			panic(err)
 		}
-	}
-
-	if gp.colliding == nil {
-		gp.colliding = make(map[pixel.Vec]Collidable)
 	}
 
 	if gp.armSprite == nil {
@@ -92,59 +75,22 @@ func (gp *body) init() {
 	}
 }
 
-func (gp *body) checkCollisions(x Collidable, normal pixel.Vec) {
-	switch x.(type) {
-	case *laser, *character:
-		return
-	case *wall:
-		// Moving the wall box by the normal scaled gives a bit of extra leeway before the collision is considered over
-		// This makes spamming through walls more difficult, but not impossible
-		if gp.rect.Norm().Intersect(x.Rect().Moved(normal.Scaled(20)).Norm()) != pixel.R(0, 0, 0, 0) {
-			// still collided
-		} else {
-			// no longer collided
-			gp.colliding[normal] = nil
-		}
-	}
-}
-
 func (gp *body) update(dt float64) {
-
-	for _, normal := range normalMap {
-		if gp.colliding[normal] != nil {
-			gp.checkCollisions(gp.colliding[normal], normal)
-		}
-	}
 
 	// control the body with keys
 	ctrl := pixel.ZV
 
-	// This is a bit messy, but stops ctrl from being altered in a certain direction if the body
-	// has collided in said direction
-	var skipx bool
-	var skipy bool
-
-	if win.Pressed(pixelgl.KeyA) && gp.colliding[normalMap[leftNormal]] == nil {
+	if win.Pressed(pixelgl.KeyA) {
 		ctrl.X--
-		skipx = true
-	} else if gp.colliding[normalMap[leftNormal]] != nil {
-		ctrl.X = 0
 	}
-	if win.Pressed(pixelgl.KeyD) && gp.colliding[normalMap[rightNormal]] == nil {
+	if win.Pressed(pixelgl.KeyD) {
 		ctrl.X++
-	} else if gp.colliding[normalMap[rightNormal]] != nil && !skipx {
-		ctrl.X = 0
 	}
-	if win.Pressed(pixelgl.KeyW) && gp.colliding[normalMap[upNormal]] == nil {
+	if win.Pressed(pixelgl.KeyW) {
 		ctrl.Y++
-		skipy = true
-	} else if gp.colliding[normalMap[upNormal]] != nil {
-		ctrl.Y = 0
 	}
-	if win.Pressed(pixelgl.KeyS) && gp.colliding[normalMap[downNormal]] == nil {
+	if win.Pressed(pixelgl.KeyS) {
 		ctrl.Y--
-	} else if gp.colliding[normalMap[downNormal]] != nil && !skipy {
-		ctrl.Y = 0
 	}
 
 	// apply controls

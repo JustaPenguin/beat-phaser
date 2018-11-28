@@ -21,16 +21,12 @@ func (c *character) HandleCollision(x Collidable, collisionTime float64, normal 
 	case *laser:
 		c.die()
 	case *wall:
-
-		// collision Collidable and direction saved
-		c.body.colliding[normal] = x
-
 		if normal.Y == 0 {
-			// collision in X. move one pixel into wall
-			c.body.rect = c.body.rect.Moved(c.body.vel.ScaledXY(pixel.V(1, 0)))
+			// collision in X. move back by c.body.vel (with a negated x)
+			c.body.rect = c.body.rect.Moved(c.body.vel.ScaledXY(pixel.V(-1, 0)))
 		} else {
-			// collision in Y. move one pixel into wall
-			c.body.rect = c.body.rect.Moved(c.body.vel.ScaledXY(pixel.V(0, 1)))
+			// collision in Y. move back by c.body.vel (with a negated y)
+			c.body.rect = c.body.rect.Moved(c.body.vel.ScaledXY(pixel.V(0, -1)))
 		}
 	}
 }
