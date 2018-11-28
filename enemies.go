@@ -139,7 +139,7 @@ func (e *enemy) HandleCollision(x Collidable, collisionTime float64, normal pixe
 		if e.health <= 0 {
 			e.die()
 		}
-	case *wall, *character, *enemy:
+	case *wall, *character:
 		e.stopMotionCollision(collisionTime, normal)
 	}
 }
@@ -148,10 +148,13 @@ func (e *enemy) stopMotionCollision(collisionTime float64, normal pixel.Vec) {
 	if normal.Y == 0 {
 		// collision in X. move back by c.body.vel (with a negated x)
 		e.rect = e.rect.Moved(e.vel.ScaledXY(pixel.V(-1, 0)))
+		e.vel = e.vel.ScaledXY(pixel.V(0, 1))
 	} else {
 		// collision in Y. move back by c.body.vel (with a negated y)
 		e.rect = e.rect.Moved(e.vel.ScaledXY(pixel.V(0, -1)))
+		e.vel = e.vel.ScaledXY(pixel.V(1, 0))
 	}
+
 }
 
 func (e *enemy) Rect() pixel.Rect {

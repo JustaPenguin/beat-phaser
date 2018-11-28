@@ -120,7 +120,7 @@ func sweptAABB(moving, static Collidable) (collisionTime float64, normal pixel.V
 	entryTime := math.Max(entry.X, entry.Y)
 	exitTime := math.Min(exit.X, exit.Y)
 
-	if entryTime > exitTime || entry.X < 0 && entry.Y < 0 || entry.X > 1 || entry.Y > 1 {
+	if (movingRect.Intersect(staticRect).Area() == 0) && (entryTime > exitTime || entry.X < 0 && entry.Y < 0 || entry.X > 1 || entry.Y > 1) {
 		// no collision
 		return 1.0, pixel.ZV
 	} else {
