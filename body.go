@@ -268,7 +268,6 @@ func (gp *body) draw(t pixel.Target) {
 		gp.h = gp.health / gp.maxHealth
 	}
 
-
 	if gp.state != idle && gp.state != dying {
 		// only draw the arm if we're not idling
 		gp.armSprite.DrawColorMask(t, gp.armMatrix, pixel.RGB(gp.h, gp.h, gp.h))

@@ -145,7 +145,7 @@ type enemy struct {
 	lastBuildupFrameIndex  int
 	attackBuildUpTime      time.Time
 	attackAngle            float64
-	attackAngleModifier float64
+	attackAngleModifier    float64
 
 	scythe *pixel.Sprite
 }
@@ -305,8 +305,8 @@ func (e *enemy) draw(t pixel.Target) {
 	e.sprite.DrawColorMask(t, m, pixel.RGB(h, h, h))
 
 	if e.isAttacking {
-		e.scythe.DrawColorMask(t, m.Rotated(e.rect.Center().Sub(pixel.V(10, 0)), e.attackAngle + 0.1).ScaledXY(e.rect.Center().Sub(pixel.V(10, 0)), pixel.V(1, -1)), pixel.RGBA{R: 0.5, G: 0.5, B: 0.5, A: 0.8})
+		e.scythe.DrawColorMask(t, m.Rotated(e.rect.Center().Sub(pixel.V(10, 0)), e.attackAngle+0.1).ScaledXY(e.rect.Center().Sub(pixel.V(10, 0)), pixel.V(1, -1)), pixel.RGBA{R: 0.5, G: 0.5, B: 0.5, A: 0.8})
 		e.scythe.DrawColorMask(t, m.Rotated(e.rect.Center().Sub(pixel.V(10, 0)), e.attackAngle).ScaledXY(e.rect.Center().Sub(pixel.V(10, 0)), pixel.V(1, -1)), pixel.RGBA{R: 0.5, G: 0.5, B: 0.5, A: 0.8})
-		e.scythe.DrawColorMask(t, m.Rotated(e.rect.Center().Sub(pixel.V(10, 0)), e.attackAngle - 0.1).ScaledXY(e.rect.Center().Sub(pixel.V(10, 0)), pixel.V(1, -1)), pixel.RGBA{R: 0.5, G: 0.5, B: 0.5, A: 0.8})
+		e.scythe.DrawColorMask(t, m.Rotated(e.rect.Center().Sub(pixel.V(10, 0)), e.attackAngle-0.1).ScaledXY(e.rect.Center().Sub(pixel.V(10, 0)), pixel.V(1, -1)), pixel.RGBA{R: 0.5, G: 0.5, B: 0.5, A: 0.8})
 	}
 }

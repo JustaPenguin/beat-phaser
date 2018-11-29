@@ -15,7 +15,7 @@ var Messages = []string{
 	"Take Our Energy - Use It to Dance",
 }
 
-var Colors = []pixel.RGBA {
+var Colors = []pixel.RGBA{
 	pixel.RGB(235.0/255.0, 35.0/255.0, 208.0/255.0),
 	pixel.RGB(42.0/255.0, 251.0/255.0, 249.0/255.0),
 	pixel.RGB(88.0/255.0, 16.0/255.0, 140.0/255.0),
@@ -27,12 +27,12 @@ type deadMessage struct {
 	pos   pixel.Vec
 	atlas *text.Atlas
 
-	color     pixel.RGBA
+	color pixel.RGBA
 
-	text      string
+	text string
 
-	tick <-chan time.Time
-	fastTick <- chan time.Time
+	tick     <-chan time.Time
+	fastTick <-chan time.Time
 }
 
 func (d *deadMessage) init() {
@@ -43,7 +43,7 @@ func (d *deadMessage) init() {
 
 	d.text = Messages[0]
 	d.tick = time.Tick(time.Second * 2)
-	d.fastTick = time.Tick(time.Millisecond*150)
+	d.fastTick = time.Tick(time.Millisecond * 150)
 }
 
 func (d *deadMessage) pickRandomMessage() {

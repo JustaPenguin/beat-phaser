@@ -13,9 +13,9 @@ import (
 )
 
 type world struct {
-	character *character
-	enemies   *enemiesCollection
-	advert    *advert
+	character   *character
+	enemies     *enemiesCollection
+	advert      *advert
 	deadMessage *deadMessage
 
 	rain  *rain
