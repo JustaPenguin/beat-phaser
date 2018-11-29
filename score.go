@@ -99,7 +99,7 @@ func (s *score) init() {
 	}()
 
 	// start the current track
-	//go s.audio.play(s.audioCh)
+	go s.audio.play(s.audioCh)
 }
 
 func (s *score) update() {

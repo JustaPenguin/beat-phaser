@@ -20,6 +20,7 @@ type world struct {
 
 	rain  *rain
 	rooms []*room
+	light *colorLight
 
 	weather   *imdraw.IMDraw
 	mainScene *imdraw.IMDraw
@@ -114,6 +115,15 @@ func (w *world) init() {
 	}
 
 	w.rain.init()
+
+	w.light = &colorLight{
+		color: colornames.Mediumpurple,
+		point: pixel.V(100, 200),
+		angle: -math.Pi /2,
+		radius: 200,
+		spread: math.Pi / math.E,
+	}
+	w.light.init()
 }
 
 func randomPointInRect(r pixel.Rect) pixel.Vec {
@@ -136,7 +146,7 @@ func (w *world) update(dt float64) {
 	}
 }
 
-func (w *world) draw(t pixel.Target) {
+func (w *world) draw(t pixel.ComposeTarget) {
 	w.mainScene.Clear()
 	w.weather.Clear()
 
@@ -162,8 +172,10 @@ func (w *world) draw(t pixel.Target) {
 	w.rain.draw(w.weather)
 
 	w.weather.Draw(t)
+
 	w.mainScene.Draw(t)
 	w.advert.draw(t)
+	w.light.draw(t)
 
 	if ded {
 		healthDisplay -= 0.01

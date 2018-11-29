@@ -3,14 +3,14 @@ package main
 import (
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/imdraw"
+	"image/color"
 )
 
 type colorLight struct {
-	color  pixel.RGBA
+	color  color.Color
 	point  pixel.Vec
 	angle  float64
 	radius float64
-	dust   float64
 
 	spread float64
 
@@ -36,6 +36,7 @@ func (cl *colorLight) draw(dst pixel.ComposeTarget) {
 	// draw the light arc
 	dst.SetMatrix(pixel.IM.Scaled(pixel.ZV, cl.radius).Rotated(pixel.ZV, cl.angle).Moved(cl.point))
 	dst.SetColorMask(pixel.Alpha(1))
-	dst.SetComposeMethod(pixel.ComposePlus)
+	dst.SetComposeMethod(pixel.ComposeAtop)
 	cl.imd.Draw(dst)
+	dst.SetComposeMethod(pixel.ComposeOver)
 }
