@@ -217,7 +217,8 @@ func (r *rain) update() {
 	}
 
 	for i := range r.positions {
-		r.positions[i].Y -= rand.Float64()
+
+		r.positions[i].Y -= rand.Float64()/(0.025+rand.Float64()*0.04)
 		r.positions[i].X -= xRange
 
 		if r.positions[i].Y < r.boundingRect.Max.Y {
