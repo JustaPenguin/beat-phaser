@@ -16,6 +16,7 @@ var advertMessages = []string{
 	"Welcome to Beat Phaser. Try not to die, won't you?",
 	"This is another hilarious message",
 	"Another hilarious message that is much longer than the previous hilarious message hahaha",
+	"Boogie",
 }
 
 type advert struct {
@@ -36,6 +37,14 @@ func (a *advert) init() {
 		basicfont.Face7x13,
 		text.ASCII,
 	)
+
+	for i := range advertMessages {
+		if len(advertMessages[i]) < a.maxWidth {
+			for j := len(advertMessages[i]); j < a.maxWidth; j++ {
+				advertMessages[i] += " "
+			}
+		}
+	}
 
 	a.text = advertMessages[0] + advertMessageSpacing
 	a.tick = time.Tick(time.Second * 20)

@@ -26,6 +26,10 @@ type score struct {
 }
 
 func (s *score) setMultiplier(multiplier int) {
+	if multiplier < 1 {
+		return
+	}
+
 	s.multiplier = multiplier
 }
 

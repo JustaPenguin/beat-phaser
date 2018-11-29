@@ -16,7 +16,7 @@ import (
 type world struct {
 	character *character
 	enemies   *enemiesCollection
-	advert *advert
+	advert    *advert
 
 	rain  *rain
 	rooms []*room
@@ -36,7 +36,7 @@ func (w *world) init() {
 	w.weather = imdraw.New(nil)
 
 	w.advert = &advert{
-		pos: pixel.V(-440, 155),
+		pos:      pixel.V(-440, 155),
 		maxWidth: 45,
 	}
 	w.advert.init()

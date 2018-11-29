@@ -1,10 +1,21 @@
 package main
 
 import (
+	"math"
+	"math/rand"
+	"path/filepath"
+	"time"
+
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/imdraw"
-	"math"
-	"path/filepath"
+)
+
+const (
+	maxNumberOfEnemies = 20
+)
+
+var (
+	attackBuildUpDuration = time.Millisecond * 400
 )
 
 type enemiesCollection struct {
@@ -26,10 +37,10 @@ func (e *enemiesCollection) init() {
 	}
 
 	e.enemies = append(e.enemies, &enemy{
-		initialPos: pixel.Vec{X: 0, Y: 0},
-		moveSpeed:  2,
-		health:     100,
-		maxHealth:  100,
+		spawnPos:  pixel.V(float64(rand.Intn(1000)-500), float64(rand.Intn(1000)-500)),
+		moveSpeed: 2,
+		health:    100,
+		maxHealth: 100,
 
 		rect: pixel.R(-84, -74, 84, 74),
 
@@ -62,13 +73,13 @@ func (e *enemiesCollection) update(dt float64, targetPos pixel.Vec) {
 
 	// e.step seconds have passed, add a new enemy (and increase spawn rate)
 	// max enemies 50 (could be more but hey)
-	if len(e.enemies) <= 50 {
+	if len(e.enemies) <= maxNumberOfEnemies {
 		if e.counter > e.step {
 			enemy := &enemy{
-				initialPos: pixel.Vec{X: 0, Y: 0},
-				moveSpeed:  2,
-				health:     math.Round(e.difficulty/10) * 10, // health is nearest 20 to difficulty
-				maxHealth:  math.Round(e.difficulty/10) * 10,
+				spawnPos:  pixel.V(float64(rand.Intn(1000)-500), float64(rand.Intn(1000)-500)),
+				moveSpeed: 2,
+				health:    math.Round(e.difficulty/10) * 10, // health is nearest 20 to difficulty
+				maxHealth: math.Round(e.difficulty/10) * 10,
 
 				rect: pixel.R(-84, -74, 84, 74),
 
@@ -111,10 +122,10 @@ type enemy struct {
 	rect              pixel.Rect
 	health, maxHealth float64
 	ded               bool
+	isAttacking       bool
 
-	initialPos pixel.Vec // Used for lerp, left just in case
-	midPoint   pixel.Vec
-	target     pixel.Vec
+	spawnPos pixel.Vec
+	target   pixel.Vec
 
 	counter float64
 	step    float64
@@ -127,10 +138,16 @@ type enemy struct {
 	sprite *pixel.Sprite
 
 	//anim
-	sheet pixel.Picture
-	frame pixel.Rect
-	anims map[string][]pixel.Rect
+	sheet                  pixel.Picture
+	frame                  pixel.Rect
+	anims                  map[string][]pixel.Rect
 	rate, animCounter, dir float64
+	lastBuildupFrameIndex  int
+	attackBuildUpTime      time.Time
+	attackAngle            float64
+	attackAngleModifier float64
+
+	scythe *pixel.Sprite
 }
 
 func (e *enemy) Vel() pixel.Vec {
@@ -161,7 +178,6 @@ func (e *enemy) stopMotionCollision(collisionTime float64, normal pixel.Vec) {
 		e.rect = e.rect.Moved(e.vel.ScaledXY(pixel.V(0, -1)))
 		e.vel = e.vel.ScaledXY(pixel.V(1, 0))
 	}
-
 }
 
 func (e *enemy) Rect() pixel.Rect {
@@ -190,37 +206,27 @@ func (e *enemy) init() {
 	}
 
 	e.imd = imdraw.New(e.sheet)
+	e.rect = e.rect.Moved(e.spawnPos)
 
 	e.sprite = pixel.NewSprite(nil, pixel.Rect{})
+	e.attackAngle = -1.2
+
+	if e.scythe == nil {
+		im, err := loadPicture("images/scythe")
+
+		if err != nil {
+			panic(err)
+		}
+
+		e.scythe = pixel.NewSprite(im, im.Bounds())
+	}
 }
 
 func (e *enemy) update(dt float64, targetPos pixel.Vec) {
 	e.animCounter += dt
-
-	// @TODO attacking animation
-	i := int(math.Floor(e.counter / e.rate / 2))
-	e.frame = e.anims["Norm"][i%len(e.anims["Norm"])]
+	e.target = targetPos
 
 	e.counter += dt
-
-	// If we reached the target assign a new one (updated character position) OLD LERPING CODE
-	/*if ((int(e.pos.X) >= int(e.target.X-2)) && (int(e.pos.X) <= int(e.target.X+2))) &&
-		((int(e.pos.Y) >= int(e.target.Y-2)) && (int(e.pos.Y) <= int(e.target.Y+2))) {
-		rand := rand2.Float64() * 10
-
-		e.initialPos = e.pos
-		e.target = targetPos
-		e.midPoint = pixel.Vec{X: e.initialPos.X + (targetPos.X-e.initialPos.X)/2, Y: (e.initialPos.Y + (targetPos.Y-e.initialPos.Y)/2) + rand}
-
-		e.counter = 0
-	}
-
-	// Bezier curve lerp towards target
-	// @TODO control lerp speed?
-	m1 := pixel.Lerp(e.initialPos, e.midPoint, e.counter)
-	m2 := pixel.Lerp(e.midPoint, e.target, e.counter)
-
-	e.pos = pixel.Lerp(m1, m2, e.counter)*/
 
 	if e.rect.Center().X < targetPos.X {
 		e.vel.X += dt
@@ -251,13 +257,56 @@ func (e *enemy) update(dt float64, targetPos pixel.Vec) {
 	}
 
 	e.rect = e.rect.Moved(e.vel)
+
+	distanceToTarget := e.rect.Center().Sub(e.target).Len()
+
+	if distanceToTarget < 200 {
+		if e.lastBuildupFrameIndex != len(e.anims["AttackBuild"])-1 {
+			// we're not at the end of the attack build up. load the next attack build up frame
+			e.lastBuildupFrameIndex = int(math.Floor(e.counter/e.rate)) % len(e.anims["AttackBuild"])
+			e.frame = e.anims["AttackBuild"][e.lastBuildupFrameIndex]
+
+			e.attackBuildUpTime = time.Now()
+		} else {
+			if time.Now().Sub(e.attackBuildUpTime) > attackBuildUpDuration {
+				// we reached the end of the build up
+
+				e.frame = e.anims["Attack"][0]
+				e.isAttacking = true
+
+				if e.attackAngle > -4.5 {
+					e.attackAngle -= 0.1
+				} else {
+					e.isAttacking = false
+				}
+			}
+		}
+	} else {
+		e.attackAngle = 0
+		e.isAttacking = false
+		e.lastBuildupFrameIndex = 0
+		// @TODO attacking animation
+		i := int(math.Floor(e.counter / e.rate / 2))
+		e.frame = e.anims["Norm"][i%len(e.anims["Norm"])]
+	}
 }
 
 func (e *enemy) draw(t pixel.Target) {
 	h := e.health / e.maxHealth
 
-	e.imd.Clear()
 	e.sprite.Set(e.sheet, e.frame)
 
-	e.sprite.DrawColorMask(t, pixel.IM.Moved(e.rect.Center()), pixel.RGB(h, h, h))
+	m := pixel.IM.Moved(e.rect.Center())
+
+	if e.vel.X > 0 {
+		m = m.ScaledXY(e.rect.Center(), pixel.V(-1, 1))
+	}
+
+	e.sprite.DrawColorMask(t, m, pixel.RGB(h, h, h))
+
+	if e.isAttacking {
+		e.scythe.DrawColorMask(t, m.Rotated(e.rect.Center().Sub(pixel.V(10, 0)), e.attackAngle + 0.1).ScaledXY(e.rect.Center().Sub(pixel.V(10, 0)), pixel.V(1, -1)), pixel.RGBA{R: 0.5, G: 0.5, B: 0.5, A: 0.8})
+		e.scythe.DrawColorMask(t, m.Rotated(e.rect.Center().Sub(pixel.V(10, 0)), e.attackAngle).ScaledXY(e.rect.Center().Sub(pixel.V(10, 0)), pixel.V(1, -1)), pixel.RGBA{R: 0.5, G: 0.5, B: 0.5, A: 0.8})
+		e.scythe.DrawColorMask(t, m.Rotated(e.rect.Center().Sub(pixel.V(10, 0)), e.attackAngle - 0.1).ScaledXY(e.rect.Center().Sub(pixel.V(10, 0)), pixel.V(1, -1)), pixel.RGBA{R: 0.5, G: 0.5, B: 0.5, A: 0.8})
+	}
 }

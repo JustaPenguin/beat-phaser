@@ -2,6 +2,7 @@ package main
 
 import (
 	"image/color"
+	"time"
 
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/imdraw"
@@ -10,6 +11,8 @@ import (
 type character struct {
 	body   *body
 	weapon *weapon
+
+	tick <-chan time.Time
 }
 
 func (c *character) Vel() pixel.Vec {
@@ -17,9 +20,7 @@ func (c *character) Vel() pixel.Vec {
 }
 
 func (c *character) HandleCollision(x Collidable, collisionTime float64, normal pixel.Vec) {
-	switch x.(type) {
-	case *laser:
-		c.die()
+	switch collidable := x.(type) {
 	case *wall:
 		if normal.Y == 0 {
 			// collision in X. move back by c.body.vel (with a negated x)
@@ -27,6 +28,27 @@ func (c *character) HandleCollision(x Collidable, collisionTime float64, normal 
 		} else {
 			// collision in Y. move back by c.body.vel (with a negated y)
 			c.body.rect = c.body.rect.Moved(c.body.vel.ScaledXY(pixel.V(0, -1)))
+		}
+	case *enemy:
+		// damage
+
+		select {
+		case <-c.tick:
+			if !collidable.isAttacking {
+				return
+			}
+
+			if playerScore.multiplier > 1 {
+				playerScore.setMultiplier(playerScore.multiplier - 1)
+			} else {
+				c.body.health--
+
+				if c.body.health >= 0 {
+					c.die()
+				}
+			}
+		default:
+
 		}
 	}
 }
@@ -55,6 +77,8 @@ func (c *character) init() {
 
 	c.weapon = handgun
 	c.weapon.init()
+
+	c.tick = time.Tick(time.Millisecond * 200)
 }
 
 func (c *character) update(dt float64) {
