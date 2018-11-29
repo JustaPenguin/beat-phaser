@@ -47,9 +47,9 @@ func (c *character) init() {
 		gravity:   -512,
 		runSpeed:  300,
 		jumpSpeed: 192,
-		rect:      pixel.R(-62, -74, 62, 74),
+		rect:      pixel.R(-62, -74, 62, 74).Moved(playerSpawnPos),
 		rate:      1.0 / 10,
-		dir:       1,
+		dir:       -1,
 	}
 	c.body.init()
 
@@ -60,6 +60,12 @@ func (c *character) init() {
 func (c *character) update(dt float64) {
 	c.body.update(dt)
 	c.weapon.update(dt, c.body.shootPos, c.body.vel)
+
+	if c.body.rect.Norm().Intersect(streetBoundingRect.Norm()).Area() > 0 {
+		//	fmt.Println("OUTSIDE YO")
+	} else {
+		//	fmt.Println("INSIDE YO")
+	}
 }
 
 func (c *character) draw(t pixel.Target) {
