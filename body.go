@@ -16,11 +16,7 @@ const (
 	running
 	jumping
 	shooting
-
-	leftNormal  string = "left"
-	rightNormal string = "right"
-	upNormal    string = "up"
-	downNormal  string = "down"
+	dying
 )
 
 type body struct {
@@ -51,6 +47,8 @@ type body struct {
 	shootInitialised int
 
 	rotationPoint pixel.Vec
+
+	health, maxHealth, h float64
 }
 
 func (gp *body) init() {
@@ -73,6 +71,9 @@ func (gp *body) init() {
 
 		gp.armSprite = pixel.NewSprite(im, im.Bounds())
 	}
+
+	gp.maxHealth = 100
+	gp.health = gp.maxHealth
 }
 
 func (gp *body) update(dt float64) {
@@ -80,17 +81,19 @@ func (gp *body) update(dt float64) {
 	// control the body with keys
 	ctrl := pixel.ZV
 
-	if win.Pressed(pixelgl.KeyA) {
-		ctrl.X--
-	}
-	if win.Pressed(pixelgl.KeyD) {
-		ctrl.X++
-	}
-	if win.Pressed(pixelgl.KeyW) {
-		ctrl.Y++
-	}
-	if win.Pressed(pixelgl.KeyS) {
-		ctrl.Y--
+	if gp.health > 0 {
+		if win.Pressed(pixelgl.KeyA) {
+			ctrl.X--
+		}
+		if win.Pressed(pixelgl.KeyD) {
+			ctrl.X++
+		}
+		if win.Pressed(pixelgl.KeyW) {
+			ctrl.Y++
+		}
+		if win.Pressed(pixelgl.KeyS) {
+			ctrl.Y--
+		}
 	}
 
 	// apply controls
@@ -138,6 +141,10 @@ func (gp *body) update(dt float64) {
 		gp.shootInitialised--
 	}
 
+	if gp.health <= 0 {
+		newState = dying
+	}
+
 	// reset the time counter if the state changed
 	if gp.state != newState {
 		gp.state = newState
@@ -154,6 +161,14 @@ func (gp *body) update(dt float64) {
 		gp.frame = gp.anims["Run"][gp.runFrame]
 	case shooting:
 		gp.frame = gp.anims["Run"][1]
+	case dying:
+		i := int(math.Floor(gp.counter / gp.rate))
+
+		if i >= len(gp.anims["Die"])-1 {
+			gp.frame = gp.anims["Die"][len(gp.anims["Die"])-1]
+		} else {
+			gp.frame = gp.anims["Die"][i]
+		}
 	case jumping:
 		speed := gp.vel.Y
 		i := int((-speed/gp.jumpSpeed + 1) / 2 * float64(len(gp.anims["Jump"])))
@@ -243,23 +258,35 @@ func (gp *body) draw(t pixel.Target) {
 
 	gp.imd.Clear()
 
-	if gp.state != idle {
+	if ded {
+		gp.h += 0.05
+
+		if gp.h >= 0.5 {
+			gp.h = 0.8
+		}
+	} else {
+		gp.h = gp.health / gp.maxHealth
+	}
+
+	if gp.state != idle && gp.state != dying {
 		// only draw the arm if we're not idling
-		gp.armSprite.Draw(t, gp.armMatrix)
+		gp.armSprite.DrawColorMask(t, gp.armMatrix, pixel.RGB(gp.h, gp.h, gp.h))
 	}
 
 	if gp.sprite == nil {
 		gp.sprite = pixel.NewSprite(nil, pixel.Rect{})
 	}
+
 	// draw the correct frame with the correct position and direction
 	gp.sprite.Set(gp.sheet, gp.frame)
-	gp.sprite.Draw(gp.imd, pixel.IM.
+	gp.sprite.DrawColorMask(gp.imd, pixel.IM.
 		ScaledXY(pixel.ZV, pixel.V(
 			gp.rect.W()/gp.sprite.Frame().W(),
 			gp.rect.H()/gp.sprite.Frame().H(),
 		)).
 		ScaledXY(pixel.ZV, pixel.V(-gp.dir, 1)).
 		Moved(gp.rect.Center()),
+		pixel.RGB(gp.h, gp.h, gp.h),
 	)
 	gp.imd.Draw(t)
 }

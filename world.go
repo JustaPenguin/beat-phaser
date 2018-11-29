@@ -13,9 +13,10 @@ import (
 )
 
 type world struct {
-	character *character
-	enemies   *enemiesCollection
-	advert    *advert
+	character   *character
+	enemies     *enemiesCollection
+	advert      *advert
+	deadMessage *deadMessage
 
 	rain  *rain
 	rooms []*room
@@ -24,6 +25,8 @@ type world struct {
 	mainScene *imdraw.IMDraw
 }
 
+var ded bool
+var healthDisplay float64
 var wallMidpointPositionVec = pixel.V(0, -50)
 var streetBoundingRect = pixel.R(-2100, -200, 2100, -2100)
 
@@ -41,7 +44,11 @@ func (w *world) init() {
 	}
 	w.advert.init()
 
-	// House layers
+	w.deadMessage = &deadMessage{
+		pos: w.character.body.rect.Center().Add(pixel.V(-52, 50)),
+	}
+	w.deadMessage.init()
+
 	w.rooms = append(w.rooms, &room{
 		path: "/world-layer-background-bottom",
 		walls: []*wall{
@@ -120,6 +127,7 @@ func (w *world) update(dt float64) {
 	w.character.update(dt)
 	w.enemies.update(dt, w.character.body.rect.Center())
 	w.advert.update(dt)
+	w.deadMessage.update(dt, w.character.body.rect.Center().Add(pixel.V(-52, 50)))
 
 	for _, room := range w.rooms {
 		if room.animLayer {
@@ -156,6 +164,34 @@ func (w *world) draw(t pixel.Target) {
 	w.weather.Draw(t)
 	w.mainScene.Draw(t)
 	w.advert.draw(t)
+
+	if ded {
+		healthDisplay -= 0.01
+		if healthDisplay <= 0 {
+			healthDisplay = 0
+		}
+
+		imd := imdraw.New(nil)
+
+		imd.Color = colornames.Black
+		imd.Intensity = healthDisplay
+
+		imd.Push(pixel.V(-10000, -10000))
+		imd.Push(pixel.V(-10000, 10000))
+		imd.Push(pixel.V(10000, 10000))
+		imd.Push(pixel.V(10000, -10000))
+
+		imd.Polygon(0)
+
+		imd.Draw(t)
+
+		w.character.draw(t)
+
+		w.deadMessage.draw(t)
+
+	} else {
+		healthDisplay = 1
+	}
 }
 
 type rain struct {

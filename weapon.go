@@ -43,16 +43,18 @@ func (w *weapon) init() {
 }
 
 func (w *weapon) fire(origin pixel.Vec, angle float64, color color.Color) {
-	l := &laser{
-		color:     color,
-		velocity:  pixel.V(w.speed, 0).Rotated(angle),
-		damage:    float64(100 * playerScore.multiplier),
-		pos:       origin,
-		thickness: 10,
-	}
-	l.init()
+	if !ded {
+		l := &laser{
+			color:     color,
+			velocity:  pixel.V(w.speed, 0).Rotated(angle),
+			damage:    float64(100 * playerScore.multiplier),
+			pos:       origin,
+			thickness: 10,
+		}
+		l.init()
 
-	w.lasers = append(w.lasers, l)
+		w.lasers = append(w.lasers, l)
+	}
 }
 
 func (w *weapon) draw(t pixel.Target) {
