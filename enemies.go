@@ -2,7 +2,6 @@ package main
 
 import (
 	"math"
-	"math/rand"
 	"path/filepath"
 	"time"
 
@@ -28,16 +27,20 @@ type enemiesCollection struct {
 	img pixel.Picture
 }
 
-func (e *enemiesCollection) init() {
-	var err error
+func (e *enemiesCollection) spawnPosition() pixel.Vec {
 
-	e.img, err = loadPicture("images/sprites/reaper")
-	if err != nil {
-		panic(err)
-	}
+	container := streetBoundingRect.Norm()
+	container.Min.X += 600
+	container.Min.Y += 600
+	container.Max.X -= 600
+	container.Max.Y -= 600
 
-	e.enemies = append(e.enemies, &enemy{
-		spawnPos:  pixel.V(float64(rand.Intn(1000)-500), float64(rand.Intn(1000)-500)),
+	return randomPointInRect(container)
+}
+
+func (e *enemiesCollection) newEnemy() *enemy {
+	return &enemy{
+		spawnPos:  e.spawnPosition(),
 		moveSpeed: 2,
 		health:    100,
 		maxHealth: 100,
@@ -49,7 +52,16 @@ func (e *enemiesCollection) init() {
 
 		imd: imdraw.New(nil),
 		img: e.img,
-	})
+	}
+}
+
+func (e *enemiesCollection) init() {
+	var err error
+
+	e.img, err = loadPicture("images/sprites/reaper")
+	if err != nil {
+		panic(err)
+	}
 
 	e.step = 2
 	e.difficulty = 100
@@ -74,21 +86,8 @@ func (e *enemiesCollection) update(dt float64, targetPos pixel.Vec) {
 	// e.step seconds have passed, add a new enemy (and increase spawn rate)
 	// max enemies 50 (could be more but hey)
 	if len(e.enemies) <= maxNumberOfEnemies {
-		if e.counter > e.step {
-			enemy := &enemy{
-				spawnPos:  pixel.V(float64(rand.Intn(1000)-500), float64(rand.Intn(1000)-500)),
-				moveSpeed: 2,
-				health:    math.Round(e.difficulty/10) * 10, // health is nearest 20 to difficulty
-				maxHealth: math.Round(e.difficulty/10) * 10,
-
-				rect: pixel.R(-84, -74, 84, 74),
-
-				color1: randomNiceColor(),
-				color2: randomNiceColor(),
-
-				imd: imdraw.New(nil),
-				img: e.img,
-			}
+		if e.counter > e.step && characterIsOutside {
+			enemy := e.newEnemy()
 
 			enemy.init()
 
@@ -157,7 +156,6 @@ func (e *enemy) Vel() pixel.Vec {
 func (e *enemy) HandleCollision(x Collidable, collisionTime float64, normal pixel.Vec) {
 	switch collidable := x.(type) {
 	case *laser:
-
 		e.health -= collidable.damage
 
 		if e.health <= 0 {
