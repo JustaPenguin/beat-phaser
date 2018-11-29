@@ -127,9 +127,9 @@ type enemy struct {
 	sprite *pixel.Sprite
 
 	//anim
-	sheet pixel.Picture
-	frame pixel.Rect
-	anims map[string][]pixel.Rect
+	sheet                  pixel.Picture
+	frame                  pixel.Rect
+	anims                  map[string][]pixel.Rect
 	rate, animCounter, dir float64
 }
 
