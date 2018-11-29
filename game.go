@@ -20,7 +20,8 @@ var (
 	win    *pixelgl.Window
 	camPos pixel.Vec
 
-	playerScore *score
+	playerScore    *score
+	playerSpawnPos = pixel.V(-625, -50)
 )
 
 type game struct {
@@ -38,7 +39,7 @@ func (g *game) init() error {
 	playerScore.init()
 
 	// camera
-	camPos = pixel.ZV
+	camPos = playerSpawnPos
 
 	return nil
 }
