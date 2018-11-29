@@ -1,6 +1,8 @@
 package main
 
 import (
+	"github.com/faiface/pixel"
+	"github.com/faiface/pixel/imdraw"
 	"golang.org/x/image/colornames"
 	"image"
 	"image/color"
@@ -8,15 +10,13 @@ import (
 	"math/rand"
 	"os"
 	"path/filepath"
-
-	"github.com/faiface/pixel"
-	"github.com/faiface/pixel/imdraw"
 )
 
 type world struct {
 	character *character
 	enemies   *enemiesCollection
 	advert    *advert
+	deadMessage *deadMessage
 
 	rain  *rain
 	rooms []*room
@@ -25,6 +25,8 @@ type world struct {
 	mainScene *imdraw.IMDraw
 }
 
+var ded bool
+var healthDisplay float64
 var wallMidpointPositionVec = pixel.V(0, -50)
 
 func (w *world) init() {
@@ -40,6 +42,11 @@ func (w *world) init() {
 		maxWidth: 45,
 	}
 	w.advert.init()
+
+	w.deadMessage = &deadMessage{
+		pos: w.character.body.rect.Center().Add(pixel.V(-52, 50)),
+	}
+	w.deadMessage.init()
 
 	w.rooms = append(w.rooms, &room{
 		path: "/world-layer-background-bottom",
@@ -89,6 +96,7 @@ func (w *world) update(dt float64) {
 	w.character.update(dt)
 	w.enemies.update(dt, w.character.body.rect.Center())
 	w.advert.update(dt)
+	w.deadMessage.update(dt, w.character.body.rect.Center().Add(pixel.V(-52, 50)))
 
 	for _, room := range w.rooms {
 		if room.animLayer {
@@ -125,6 +133,34 @@ func (w *world) draw(t pixel.Target) {
 	w.weather.Draw(t)
 	w.mainScene.Draw(t)
 	w.advert.draw(t)
+
+	if ded {
+		healthDisplay -= 0.01
+		if healthDisplay <= 0 {
+			healthDisplay = 0
+		}
+
+		imd := imdraw.New(nil)
+
+		imd.Color = colornames.Black
+		imd.Intensity = healthDisplay
+
+		imd.Push(pixel.V(-10000, -10000))
+		imd.Push(pixel.V(-10000, 10000))
+		imd.Push(pixel.V(10000, 10000))
+		imd.Push(pixel.V(10000, -10000))
+
+		imd.Polygon(0)
+
+		imd.Draw(t)
+
+		w.character.draw(t)
+
+		w.deadMessage.draw(t)
+
+	} else {
+		healthDisplay = 1
+	}
 }
 
 type rain struct {
@@ -225,7 +261,6 @@ func (r *room) update(dt float64) {
 }
 
 func (r *room) draw(t pixel.Target) {
-	//r.image.Draw(t, pixel.IM.Scaled(r.image.Frame().Center(), 2.5))
 	r.sprite.Draw(t, pixel.IM)
 
 	r.imd.Clear()

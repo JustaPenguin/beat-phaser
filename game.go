@@ -32,6 +32,7 @@ type game struct {
 func (g *game) init() error {
 	g.world = &world{}
 	g.world.init()
+	ded = false
 
 	playerScore = &score{}
 	playerScore.init()
