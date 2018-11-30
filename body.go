@@ -86,7 +86,7 @@ func (gp *body) init() {
 
 func (gp *body) update(dt float64) {
 
-	if win.JustPressed(pixelgl.MouseButtonRight) && time.Now().Sub(gp.lastDodge) > time.Millisecond*600 {
+	if win.JustPressed(pixelgl.MouseButtonRight) && time.Now().Sub(gp.lastDodge) > time.Millisecond*600 && !isDodging {
 		isDodging = true
 		gp.dodgeEnd = time.Tick(time.Millisecond * 300)
 	}
