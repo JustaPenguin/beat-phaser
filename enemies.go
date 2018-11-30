@@ -268,25 +268,28 @@ func (e *enemy) update(dt float64, targetPos pixel.Vec) {
 		} else {
 			if time.Now().Sub(e.attackBuildUpTime) > attackBuildUpDuration {
 				// we reached the end of the build up
-
 				e.frame = e.anims["Attack"][0]
 				e.isAttacking = true
 
 				if e.attackAngle > -4.5 {
 					e.attackAngle -= 0.1
 				} else {
-					e.isAttacking = false
+					e.clearAttackingState()
 				}
 			}
 		}
 	} else {
-		e.attackAngle = 0
-		e.isAttacking = false
-		e.lastBuildupFrameIndex = 0
-		// @TODO attacking animation
-		i := int(math.Floor(e.counter / e.rate / 2))
-		e.frame = e.anims["Norm"][i%len(e.anims["Norm"])]
+		e.clearAttackingState()
 	}
+}
+
+func (e *enemy) clearAttackingState() {
+	e.attackAngle = 0
+	e.isAttacking = false
+	e.lastBuildupFrameIndex = 0
+	// @TODO attacking animation
+	i := int(math.Floor(e.counter / e.rate / 2))
+	e.frame = e.anims["Norm"][i%len(e.anims["Norm"])]
 }
 
 func (e *enemy) draw(t pixel.Target) {
