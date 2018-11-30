@@ -92,7 +92,6 @@ func (gp *body) update(dt float64) {
 	}
 
 	// control the body with keys
-
 	if !isDodging {
 		gp.ctrl = pixel.ZV
 

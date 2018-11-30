@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	maxNumberOfEnemies = 20
+	maxNumberOfEnemies = 40
 )
 
 var (
@@ -42,8 +42,8 @@ func (e *enemiesCollection) newEnemy() *enemy {
 	return &enemy{
 		spawnPos:  e.spawnPosition(),
 		moveSpeed: 2,
-		health:    100,
-		maxHealth: 100,
+		health:    e.difficulty,
+		maxHealth: e.difficulty,
 
 		rect: pixel.R(-84, -74, 84, 74),
 
