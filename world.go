@@ -20,7 +20,7 @@ type world struct {
 
 	rain  *rain
 	rooms []*room
-	light *colorLight
+	lights []*colorLight
 
 	weather   *imdraw.IMDraw
 	mainScene *imdraw.IMDraw
@@ -116,14 +116,26 @@ func (w *world) init() {
 
 	w.rain.init()
 
-	w.light = &colorLight{
-		color: colornames.Mediumpurple,
-		point: pixel.V(100, 200),
-		angle: -math.Pi /2,
-		radius: 200,
-		spread: math.Pi / math.E,
+	w.lights = []*colorLight {
+		{
+			color:  colornames.Yellow,
+			point:  pixel.V(-667, 695),
+			angle:  -math.Pi / 2,
+			radius: 50,
+			spread: math.Pi / math.E,
+		},
+		{
+			color:  colornames.Yellow,
+			point:  pixel.V(-552, 695),
+			angle:  -math.Pi / 2,
+			radius: 50,
+			spread: math.Pi / math.E,
+		},
 	}
-	w.light.init()
+
+	for _, light := range w.lights {
+		light.init()
+	}
 }
 
 func randomPointInRect(r pixel.Rect) pixel.Vec {
@@ -161,6 +173,11 @@ func (w *world) draw(t pixel.ComposeTarget) {
 	w.character.draw(t)
 	w.enemies.draw(t)
 
+
+	for _, light := range w.lights {
+		light.draw(t)
+	}
+
 	for _, room := range w.rooms {
 		if room.topLayer && !room.animLayer {
 			room.drawnRoom.Draw(t)
@@ -175,7 +192,6 @@ func (w *world) draw(t pixel.ComposeTarget) {
 
 	w.mainScene.Draw(t)
 	w.advert.draw(t)
-	w.light.draw(t)
 
 	if ded {
 		healthDisplay -= 0.01
