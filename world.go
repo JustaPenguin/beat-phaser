@@ -158,7 +158,7 @@ func (w *world) update(dt float64) {
 	}
 }
 
-func (w *world) draw(t pixel.ComposeTarget) {
+func (w *world) draw(t pixel.Target) {
 	w.mainScene.Clear()
 	w.weather.Clear()
 
