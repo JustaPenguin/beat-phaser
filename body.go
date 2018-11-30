@@ -3,6 +3,7 @@ package main
 import (
 	"math"
 	"path/filepath"
+	"time"
 
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/imdraw"
@@ -49,6 +50,12 @@ type body struct {
 	rotationPoint pixel.Vec
 
 	health, maxHealth, h float64
+
+	ctrl pixel.Vec
+
+	isDodging bool
+	dodgeEnd  <-chan time.Time
+	lastDodge time.Time
 }
 
 func (gp *body) init() {
@@ -78,44 +85,66 @@ func (gp *body) init() {
 
 func (gp *body) update(dt float64) {
 
-	// control the body with keys
-	ctrl := pixel.ZV
+	if win.JustPressed(pixelgl.MouseButtonRight) && time.Now().Sub(gp.lastDodge) > time.Millisecond * 600 {
+		gp.isDodging = true
+		gp.dodgeEnd = time.Tick(time.Millisecond * 300)
+	}
 
-	if gp.health > 0 {
-		if win.Pressed(pixelgl.KeyA) {
-			ctrl.X--
-		}
-		if win.Pressed(pixelgl.KeyD) {
-			ctrl.X++
-		}
-		if win.Pressed(pixelgl.KeyW) {
-			ctrl.Y++
-		}
-		if win.Pressed(pixelgl.KeyS) {
-			ctrl.Y--
+	// control the body with keys
+
+	if !gp.isDodging {
+		gp.ctrl = pixel.ZV
+
+		if gp.health > 0 {
+			if win.Pressed(pixelgl.KeyA) {
+				gp.ctrl.X--
+			}
+			if win.Pressed(pixelgl.KeyD) {
+				gp.ctrl.X++
+			}
+			if win.Pressed(pixelgl.KeyW) {
+				gp.ctrl.Y++
+			}
+			if win.Pressed(pixelgl.KeyS) {
+				gp.ctrl.Y--
+			}
 		}
 	}
 
+	select {
+	case <-gp.dodgeEnd:
+		gp.isDodging = false
+		gp.lastDodge = time.Now()
+		gp.dodgeEnd = nil
+	default:
+	}
+
+	dodgeMultiplier := 1.0
+
 	// apply controls
 	switch {
-	case ctrl.X < 0:
+	case gp.ctrl.X < 0:
 		gp.vel.X = -gp.runSpeed
-	case ctrl.X > 0:
+	case gp.ctrl.X > 0:
 		gp.vel.X = +gp.runSpeed
 	default:
 		gp.vel.X = 0
 	}
 
 	switch {
-	case ctrl.Y < 0:
+	case gp.ctrl.Y < 0:
 		gp.vel.Y = -gp.runSpeed
-	case ctrl.Y > 0:
+	case gp.ctrl.Y > 0:
 		gp.vel.Y = +gp.runSpeed
 	default:
 		gp.vel.Y = 0
 	}
 
-	gp.vel = gp.vel.Scaled(dt)
+	if gp.isDodging {
+		dodgeMultiplier = 2
+	}
+
+	gp.vel = gp.vel.Scaled(dt).Scaled(dodgeMultiplier)
 
 	// apply gravity and velocity
 	gp.rect = gp.rect.Moved(gp.vel)
@@ -151,36 +180,38 @@ func (gp *body) update(dt float64) {
 		gp.counter = 0
 	}
 
-	// determine the correct animation frame
-	switch gp.state {
-	case idle:
-		i := int(math.Floor(gp.counter / gp.rate / 2))
-		gp.frame = gp.anims["Front"][i%len(gp.anims["Front"])]
-	case running:
-		gp.runFrame = int(math.Floor(gp.counter/gp.rate)) % len(gp.anims["Run"])
-		gp.frame = gp.anims["Run"][gp.runFrame]
-	case shooting:
-		gp.frame = gp.anims["Run"][1]
-	case dying:
-		i := int(math.Floor(gp.counter / gp.rate))
+	if !gp.isDodging {
 
-		if i >= len(gp.anims["Die"])-1 {
-			gp.frame = gp.anims["Die"][len(gp.anims["Die"])-1]
-		} else {
-			gp.frame = gp.anims["Die"][i]
+		// determine the correct animation frame
+		switch gp.state {
+		case idle:
+			i := int(math.Floor(gp.counter / gp.rate / 2))
+			gp.frame = gp.anims["Front"][i%len(gp.anims["Front"])]
+		case running:
+			gp.runFrame = int(math.Floor(gp.counter/gp.rate)) % len(gp.anims["Run"])
+			gp.frame = gp.anims["Run"][gp.runFrame]
+		case shooting:
+			gp.frame = gp.anims["Run"][1]
+		case dying:
+			i := int(math.Floor(gp.counter / gp.rate))
+
+			if i >= len(gp.anims["Die"])-1 {
+				gp.frame = gp.anims["Die"][len(gp.anims["Die"])-1]
+			} else {
+				gp.frame = gp.anims["Die"][i]
+			}
+		case jumping:
+			speed := gp.vel.Y
+			i := int((-speed/gp.jumpSpeed + 1) / 2 * float64(len(gp.anims["Jump"])))
+			if i < 0 {
+				i = 0
+			}
+			if i >= len(gp.anims["Front"]) {
+				i = len(gp.anims["Front"]) - 1
+			}
+			gp.frame = gp.anims["Front"][i]
 		}
-	case jumping:
-		speed := gp.vel.Y
-		i := int((-speed/gp.jumpSpeed + 1) / 2 * float64(len(gp.anims["Jump"])))
-		if i < 0 {
-			i = 0
-		}
-		if i >= len(gp.anims["Front"]) {
-			i = len(gp.anims["Front"]) - 1
-		}
-		gp.frame = gp.anims["Front"][i]
 	}
-
 	// set the facing direction of the body
 	if gp.vel.X != 0 {
 		if gp.vel.X > 0 {

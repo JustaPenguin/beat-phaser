@@ -209,7 +209,7 @@ func (e *enemy) init() {
 
 	var err error
 
-	e.sheet, e.anims, err = loadAnimationSheet("reaper", 168, filepath.Join("images", "sprites"))
+	e.sheet, e.anims, err = loadAnimationSheet("reaper", 188, filepath.Join("images", "sprites"))
 
 	if err != nil {
 		panic(err)
@@ -281,7 +281,7 @@ func (e *enemy) update(dt float64, targetPos pixel.Vec) {
 		} else {
 			if time.Now().Sub(e.attackBuildUpTime) > attackBuildUpDuration {
 				// we reached the end of the build up
-				e.frame = e.anims["Attack"][0]
+				e.frame = e.anims["Attack"][int(math.Floor(e.counter/e.rate)) % len(e.anims["Attack"])]
 				e.isAttacking = true
 
 				if e.attackAngle > -4.5 {
@@ -317,12 +317,6 @@ func (e *enemy) draw(t pixel.Target) {
 	}
 
 	e.sprite.DrawColorMask(t, m, pixel.RGB(h, h, h))
-
-	if e.isAttacking {
-		e.scythe.DrawColorMask(t, m.Rotated(e.rect.Center().Sub(pixel.V(10, 0)), e.attackAngle+0.1).ScaledXY(e.rect.Center().Sub(pixel.V(10, 0)), pixel.V(1, -1)), pixel.RGBA{R: 0.5, G: 0.5, B: 0.5, A: 0.8})
-		e.scythe.DrawColorMask(t, m.Rotated(e.rect.Center().Sub(pixel.V(10, 0)), e.attackAngle).ScaledXY(e.rect.Center().Sub(pixel.V(10, 0)), pixel.V(1, -1)), pixel.RGBA{R: 0.5, G: 0.5, B: 0.5, A: 0.8})
-		e.scythe.DrawColorMask(t, m.Rotated(e.rect.Center().Sub(pixel.V(10, 0)), e.attackAngle-0.1).ScaledXY(e.rect.Center().Sub(pixel.V(10, 0)), pixel.V(1, -1)), pixel.RGBA{R: 0.5, G: 0.5, B: 0.5, A: 0.8})
-	}
 }
 
 type outsideDoor struct {}
