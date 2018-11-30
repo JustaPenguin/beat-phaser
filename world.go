@@ -213,6 +213,8 @@ func (w *world) draw(t pixel.Target) {
 
 		imd.Draw(t)
 
+		w.destroy()
+
 		w.character.draw(t)
 
 		w.deadMessage.draw(t)
@@ -220,6 +222,10 @@ func (w *world) draw(t pixel.Target) {
 	} else {
 		healthDisplay = 1
 	}
+}
+
+func (w *world) destroy() {
+	w.enemies.destroy()
 }
 
 type rain struct {

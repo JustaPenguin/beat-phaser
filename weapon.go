@@ -85,7 +85,7 @@ func (w *weapon) update(dt float64, characterPos pixel.Vec, parentVelocity pixel
 		var c color.Color
 
 		if playerScore.onBeat {
-			c = playerScore.text.Color
+			c = playerScore.color
 		} else {
 			c = colornames.Black
 		}
@@ -103,7 +103,7 @@ func (w *weapon) update(dt float64, characterPos pixel.Vec, parentVelocity pixel
 				pos:    w.lasers[i].Rect().Center(),
 				normal: w.lasers[i].splashNormal,
 
-				color: playerScore.text.Color,
+				color: playerScore.color,
 			})
 		}
 

@@ -114,6 +114,16 @@ func (e *enemiesCollection) draw(t pixel.Target) {
 	}
 }
 
+func (e *enemiesCollection) destroy() {
+
+	for _, enemy := range e.enemies {
+		enemy.die()
+	}
+
+	e.enemies = make([]*enemy, 0)
+
+}
+
 type enemy struct {
 	vel       pixel.Vec
 	moveSpeed float64
@@ -157,6 +167,8 @@ func (e *enemy) HandleCollision(x Collidable, collisionTime float64, normal pixe
 	switch collidable := x.(type) {
 	case *laser:
 		e.health -= collidable.damage
+
+		playerScore.incrementScore(collidable.damage)
 
 		if e.health <= 0 {
 			e.die()
