@@ -18,8 +18,8 @@ type world struct {
 	advert      *advert
 	deadMessage *deadMessage
 
-	rain  *rain
-	rooms []*room
+	rain   *rain
+	rooms  []*room
 	lights []*colorLight
 
 	weather   *imdraw.IMDraw
@@ -116,7 +116,7 @@ func (w *world) init() {
 
 	w.rain.init()
 
-	w.lights = []*colorLight {
+	w.lights = []*colorLight{
 		{
 			color:  colornames.Yellow,
 			point:  pixel.V(-667, 695),
@@ -175,7 +175,6 @@ func (w *world) draw(t pixel.Target) {
 
 	w.character.draw(t)
 	w.enemies.draw(t)
-
 
 	for _, light := range w.lights {
 		light.draw(t)
@@ -255,7 +254,7 @@ func (r *rain) update() {
 
 	for i := range r.positions {
 
-		r.positions[i].Y -= rand.Float64()/(0.025+rand.Float64()*0.04)
+		r.positions[i].Y -= rand.Float64() / (0.025 + rand.Float64()*0.04)
 		r.positions[i].X -= xRange
 
 		if r.positions[i].Y < r.boundingRect.Max.Y {

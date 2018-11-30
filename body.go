@@ -20,6 +20,8 @@ const (
 	dying
 )
 
+var isDodging = false
+
 type body struct {
 	imd *imdraw.IMDraw
 
@@ -53,7 +55,6 @@ type body struct {
 
 	ctrl pixel.Vec
 
-	isDodging bool
 	dodgeEnd  <-chan time.Time
 	lastDodge time.Time
 }
@@ -85,14 +86,14 @@ func (gp *body) init() {
 
 func (gp *body) update(dt float64) {
 
-	if win.JustPressed(pixelgl.MouseButtonRight) && time.Now().Sub(gp.lastDodge) > time.Millisecond * 600 {
-		gp.isDodging = true
+	if win.JustPressed(pixelgl.MouseButtonRight) && time.Now().Sub(gp.lastDodge) > time.Millisecond*600 {
+		isDodging = true
 		gp.dodgeEnd = time.Tick(time.Millisecond * 300)
 	}
 
 	// control the body with keys
 
-	if !gp.isDodging {
+	if !isDodging {
 		gp.ctrl = pixel.ZV
 
 		if gp.health > 0 {
@@ -113,7 +114,7 @@ func (gp *body) update(dt float64) {
 
 	select {
 	case <-gp.dodgeEnd:
-		gp.isDodging = false
+		isDodging = false
 		gp.lastDodge = time.Now()
 		gp.dodgeEnd = nil
 	default:
@@ -140,7 +141,7 @@ func (gp *body) update(dt float64) {
 		gp.vel.Y = 0
 	}
 
-	if gp.isDodging {
+	if isDodging {
 		dodgeMultiplier = 2
 	}
 
@@ -180,7 +181,7 @@ func (gp *body) update(dt float64) {
 		gp.counter = 0
 	}
 
-	if !gp.isDodging {
+	if !isDodging {
 
 		// determine the correct animation frame
 		switch gp.state {

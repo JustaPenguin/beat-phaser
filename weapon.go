@@ -79,7 +79,7 @@ func (w *weapon) update(dt float64, characterPos pixel.Vec, parentVelocity pixel
 		w.matrix = w.matrix.Scaled(characterPos, -1).Moved(pixel.V(-10, 0))
 	}
 
-	if win.JustPressed(pixelgl.MouseButtonLeft) {
+	if win.JustPressed(pixelgl.MouseButtonLeft) && !isDodging {
 		a := getMouseAngleFromCenter()
 
 		var c color.Color

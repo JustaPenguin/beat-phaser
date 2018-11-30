@@ -266,7 +266,6 @@ func (e *enemy) update(dt float64, targetPos pixel.Vec) {
 		}
 	}
 
-
 	e.rect = e.rect.Moved(e.vel)
 
 	distanceToTarget := e.rect.Center().Sub(e.target).Len()
@@ -281,7 +280,7 @@ func (e *enemy) update(dt float64, targetPos pixel.Vec) {
 		} else {
 			if time.Now().Sub(e.attackBuildUpTime) > attackBuildUpDuration {
 				// we reached the end of the build up
-				e.frame = e.anims["Attack"][int(math.Floor(e.counter/e.rate)) % len(e.anims["Attack"])]
+				e.frame = e.anims["Attack"][int(math.Floor(e.counter/e.rate))%len(e.anims["Attack"])]
 				e.isAttacking = true
 
 				if e.attackAngle > -4.5 {
@@ -319,7 +318,7 @@ func (e *enemy) draw(t pixel.Target) {
 	e.sprite.DrawColorMask(t, m, pixel.RGB(h, h, h))
 }
 
-type outsideDoor struct {}
+type outsideDoor struct{}
 
 func (o *outsideDoor) Rect() pixel.Rect {
 	return pixel.R(710, -540, 910, -550)

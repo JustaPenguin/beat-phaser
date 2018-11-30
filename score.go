@@ -147,7 +147,6 @@ func (s *score) update() {
 		} else {
 			s.onBeat = false
 
-
 			if characterIsOutside {
 				s.increment = s.increment - 2
 
