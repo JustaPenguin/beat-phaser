@@ -92,7 +92,10 @@ func (w *world) init() {
 
 	// Wall layers
 	w.rooms = append(w.rooms, &room{path: "/wall-layer-background-bottom", offset: pixel.V(-1400, 0)})
-	w.rooms = append(w.rooms, &room{path: "/wall-layer-background-top", offset: pixel.V(-1400, 0), topLayer: true})
+	w.rooms = append(w.rooms, &room{path: "/wall-layer-background-top", offset: pixel.V(-1400, 0), topLayer: true, walls: []*wall{
+		{rect: pixel.R(-68, -140, 395, -200)}, // table with mirror
+		{rect: pixel.R(-430, 150, -135, 98)}, // table at bottom of bedrooms
+	}})
 
 	// Street layers
 	w.rooms = append(w.rooms, &room{path: "/street-base", offset: pixel.V(0, -1400), walls: []*wall{

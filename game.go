@@ -166,7 +166,7 @@ func (g *game) run() {
 		frames++
 		select {
 		case <-second:
-			win.SetTitle(fmt.Sprintf("FPS: %d", frames))
+			win.SetTitle(fmt.Sprintf("Beat Phaser - FPS: %d", frames))
 			frames = 0
 		default:
 		}
