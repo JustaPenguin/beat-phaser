@@ -13,3 +13,12 @@ Kevin MacLeod (incompetech.com)
 Licensed under Creative Commons: By Attribution 3.0
 http://creativecommons.org/licenses/by/3.0/
 
+Player model heavily inspired by
+"Spike Spiegel"
+Matt Frith
+http://www.mattfrith.com/post/59535644276/spike-spiegel-i-am-not-a-massive-anime-fan
+
+Reaper model inspired by
+"Reaper Of The Cards"
+Yu-Gi-Oh!, Konami
+https://www.yugioh.com/cards/reaper-of-the-cards

@@ -95,7 +95,7 @@ func (w *world) init() {
 	w.rooms = append(w.rooms, &room{path: "/wall-layer-background-top", offset: pixel.V(-1400, 0), topLayer: true})
 
 	// Street layers
-	w.rooms = append(w.rooms, &room{path: "/street-base", offset: pixel.V(0, -1400), walls: []*wall{
+	w.rooms = append(w.rooms, &room{path: "/street-layer-background-bottom", offset: pixel.V(0, -1400), walls: []*wall{
 		{rect: pixel.R(-2100, -540, 710, -550)}, // street top left
 		{rect: pixel.R(910, -540, 2100, -550)},  // street top right
 
@@ -103,6 +103,7 @@ func (w *world) init() {
 		{rect: pixel.R(streetBoundingRect.Min.X, streetBoundingRect.Max.Y, streetBoundingRect.Min.X-10, streetBoundingRect.Min.Y)}, // left
 		{rect: pixel.R(streetBoundingRect.Max.X, streetBoundingRect.Max.Y, streetBoundingRect.Max.X+10, streetBoundingRect.Min.Y)}, // right
 	}})
+	w.rooms = append(w.rooms, &room{path: "/street-layer-background-top", offset: pixel.V(0, -1400), topLayer: true})
 	w.rooms = append(w.rooms, &room{path: "/street-base", offset: pixel.V(1400, -1400)})
 	w.rooms = append(w.rooms, &room{path: "/street-base", offset: pixel.V(-1400, -1400)})
 
