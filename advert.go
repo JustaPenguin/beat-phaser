@@ -14,9 +14,10 @@ const textSpeed = 5
 
 var advertMessages = []string{
 	"Welcome to Beat Phaser. Try not to die, won't you?",
-	"This is another hilarious message",
-	"Another hilarious message that is much longer than the previous hilarious message hahaha",
 	"Boogie",
+	"Y'know so much of the music we hear today is pre-programmed electronic disco, we never get a chance to hear master blues men practicing their craft anymore.",
+	"By the year 2006, the music known today as the blues will exist only in the classical records department of your local public library.",
+
 }
 
 type advert struct {
