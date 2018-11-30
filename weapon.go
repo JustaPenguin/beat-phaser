@@ -85,7 +85,7 @@ func (w *weapon) update(dt float64, characterPos pixel.Vec, parentVelocity pixel
 		var c color.Color
 
 		if playerScore.onBeat {
-			c = playerScore.text.Color
+			c = playerScore.color
 		} else {
 			c = colornames.Black
 		}
@@ -103,7 +103,7 @@ func (w *weapon) update(dt float64, characterPos pixel.Vec, parentVelocity pixel
 				pos:    w.lasers[i].Rect().Center(),
 				normal: w.lasers[i].splashNormal,
 
-				color: playerScore.text.Color,
+				color: playerScore.color,
 			})
 		}
 
@@ -152,6 +152,9 @@ func (l *laser) destroy() {
 func (l *laser) HandleCollision(x Collidable, collisionTime float64, normal pixel.Vec) {
 	switch x.(type) {
 	case *laser, *character:
+		return
+	case *outsideDoor:
+		l.destroy()
 		return
 	case *enemy:
 		//@TODO create "hit" splash

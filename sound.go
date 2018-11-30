@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 	"time"
@@ -23,6 +24,12 @@ var (
 		filepath: filepath.Join("audio", "tracks", "Kevin_MacLeod_Backed_Vibes_Clean.mp3"),
 		loop:     -1,
 		bpm:      102.230,
+	}
+
+	nightOnTheDocksAudio = &audio{
+		filepath: filepath.Join("audio", "tracks", "Kevin_MacLeod_-_Night_on_the_Docks_-_Sax.mp3"),
+		loop:     -1,
+		bpm:      139.658,
 	}
 )
 
@@ -77,6 +84,9 @@ type audio struct {
 	streamer beep.StreamSeekCloser
 	format   beep.Format
 	file     *os.File
+
+	ctx context.Context
+	cfn func()
 }
 
 func (a *audio) load() error {
@@ -95,6 +105,8 @@ func (a *audio) load() error {
 
 	a.streamer = s1
 	a.format = format
+
+	a.ctx, a.cfn = context.WithCancel(context.Background())
 
 	return nil
 }
@@ -129,12 +141,18 @@ loop:
 		close(playing)
 	})))
 
-	<-playing
-
-	if a.loop != 0 {
-		a.loop--
-		goto loop
+	for {
+		select {
+		case <-a.ctx.Done():
+			return
+		case <-playing:
+			if a.loop != 0 {
+				a.loop--
+				goto loop
+			}
+		}
 	}
+
 }
 
 func (a *audio) close() error {

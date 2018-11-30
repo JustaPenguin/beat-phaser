@@ -45,6 +45,8 @@ func (c *character) HandleCollision(x Collidable, collisionTime float64, normal 
 			} else {
 				c.body.health -= 20
 
+				playerScore.incrementScore(-20.0)
+
 				if c.body.health <= 0 {
 					c.die()
 				}
@@ -61,6 +63,7 @@ func (c *character) Rect() pixel.Rect {
 
 func (c *character) die() {
 	ded = true
+	playerScore.changeTrack(nightOnTheDocksAudio)
 }
 
 func (c *character) init() {

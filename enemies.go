@@ -114,6 +114,16 @@ func (e *enemiesCollection) draw(t pixel.Target) {
 	}
 }
 
+func (e *enemiesCollection) destroy() {
+
+	for _, enemy := range e.enemies {
+		enemy.die()
+	}
+
+	e.enemies = make([]*enemy, 0)
+
+}
+
 type enemy struct {
 	vel       pixel.Vec
 	moveSpeed float64
@@ -158,10 +168,12 @@ func (e *enemy) HandleCollision(x Collidable, collisionTime float64, normal pixe
 	case *laser:
 		e.health -= collidable.damage
 
+		playerScore.incrementScore(collidable.damage)
+
 		if e.health <= 0 {
 			e.die()
 		}
-	case *wall, *character:
+	case *wall, *character, *outsideDoor:
 		e.stopMotionCollision(collisionTime, normal)
 	}
 }
@@ -254,6 +266,7 @@ func (e *enemy) update(dt float64, targetPos pixel.Vec) {
 		}
 	}
 
+
 	e.rect = e.rect.Moved(e.vel)
 
 	distanceToTarget := e.rect.Center().Sub(e.target).Len()
@@ -310,4 +323,22 @@ func (e *enemy) draw(t pixel.Target) {
 		e.scythe.DrawColorMask(t, m.Rotated(e.rect.Center().Sub(pixel.V(10, 0)), e.attackAngle).ScaledXY(e.rect.Center().Sub(pixel.V(10, 0)), pixel.V(1, -1)), pixel.RGBA{R: 0.5, G: 0.5, B: 0.5, A: 0.8})
 		e.scythe.DrawColorMask(t, m.Rotated(e.rect.Center().Sub(pixel.V(10, 0)), e.attackAngle-0.1).ScaledXY(e.rect.Center().Sub(pixel.V(10, 0)), pixel.V(1, -1)), pixel.RGBA{R: 0.5, G: 0.5, B: 0.5, A: 0.8})
 	}
+}
+
+type outsideDoor struct {}
+
+func (o *outsideDoor) Rect() pixel.Rect {
+	return pixel.R(710, -540, 910, -550)
+}
+
+func (o *outsideDoor) Vel() pixel.Vec {
+	return pixel.ZV
+}
+
+func (o *outsideDoor) HandleCollision(obj Collidable, collisionTime float64, normal pixel.Vec) {
+
+}
+
+func (o *outsideDoor) init() {
+	registerCollidable(o)
 }

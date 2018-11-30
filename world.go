@@ -136,6 +136,9 @@ func (w *world) init() {
 	for _, light := range w.lights {
 		light.init()
 	}
+
+	od := outsideDoor{}
+	od.init()
 }
 
 func randomPointInRect(r pixel.Rect) pixel.Vec {
@@ -213,6 +216,8 @@ func (w *world) draw(t pixel.Target) {
 
 		imd.Draw(t)
 
+		w.destroy()
+
 		w.character.draw(t)
 
 		w.deadMessage.draw(t)
@@ -220,6 +225,10 @@ func (w *world) draw(t pixel.Target) {
 	} else {
 		healthDisplay = 1
 	}
+}
+
+func (w *world) destroy() {
+	w.enemies.destroy()
 }
 
 type rain struct {

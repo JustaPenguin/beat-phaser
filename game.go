@@ -57,7 +57,6 @@ func (g *game) draw(canvas *pixelgl.Canvas) {
 	canvas.Clear(colornames.Black)
 
 	g.world.draw(canvas)
-	playerScore.draw()
 
 	if win.JustPressed(pixelgl.KeyC) {
 		drawCollisionBoxes = !drawCollisionBoxes
@@ -75,8 +74,7 @@ func (g *game) draw(canvas *pixelgl.Canvas) {
 		),
 	).Moved(win.Bounds().Center()))
 	canvas.Draw(win, pixel.IM.Moved(canvas.Bounds().Center()))
-
-	playerScore.text.Draw(win, pixel.IM.Moved(canvas.Bounds().Min))
+	playerScore.draw(win, canvas)
 }
 
 func (g *game) collisions() {
@@ -155,6 +153,7 @@ func (g *game) run() {
 
 		// restart the level on pressing enter
 		if win.JustPressed(pixelgl.KeyEnter) {
+			g.destroy()
 			g.init()
 		}
 
@@ -174,4 +173,8 @@ func (g *game) run() {
 
 		<-frameLimit
 	}
+}
+
+func (g *game) destroy() {
+	g.world.destroy()
 }
