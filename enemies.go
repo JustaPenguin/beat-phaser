@@ -27,6 +27,8 @@ type enemiesCollection struct {
 	img pixel.Picture
 }
 
+var enemyBox = pixel.R(-84, -74, 84, 74)
+
 func (e *enemiesCollection) spawnPosition() pixel.Vec {
 
 	container := streetBoundingRect.Norm()
@@ -34,8 +36,18 @@ func (e *enemiesCollection) spawnPosition() pixel.Vec {
 	container.Min.Y += 600
 	container.Max.X -= 600
 	container.Max.Y -= 600
+tryAgain:
+	generated := randomPointInRect(container)
 
-	return randomPointInRect(container)
+	box := enemyBox.Moved(generated).Norm()
+
+	for _, streetCollidable := range streetCollidables {
+		if streetCollidable.Rect().Norm().Intersect(box).Area() > 0 {
+			goto tryAgain
+		}
+	}
+
+	return generated
 }
 
 func (e *enemiesCollection) newEnemy() *enemy {
@@ -45,7 +57,7 @@ func (e *enemiesCollection) newEnemy() *enemy {
 		health:    e.difficulty,
 		maxHealth: e.difficulty,
 
-		rect: pixel.R(-84, -74, 84, 74),
+		rect: enemyBox,
 
 		color1: randomNiceColor(),
 		color2: randomNiceColor(),

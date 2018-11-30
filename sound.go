@@ -133,13 +133,11 @@ loop:
 		Silent:   false,
 	}
 
-	go func() {
-		ch <- time.Now()
-	}()
-
 	speaker.Play(beep.Seq(&songVolume, beep.Callback(func() {
 		close(playing)
 	})))
+
+	ch <- time.Now()
 
 	for {
 		select {
