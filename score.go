@@ -12,7 +12,7 @@ import (
 )
 
 type score struct {
-	score float64
+	score         float64
 	multiplier    int
 	increment     int
 	multiplierPos pixel.Vec
@@ -66,6 +66,19 @@ func (s *score) draw(win *pixelgl.Window, canvas *pixelgl.Canvas) {
 	scorePos.X = canvas.Bounds().Max.X - 40
 
 	scoreText.Draw(win, pixel.IM.Moved(scorePos))
+}
+
+func (s *score) changeTrack(track *audio) {
+	err := track.load()
+
+	if err != nil {
+		panic(err)
+	}
+
+	s.audio.cfn()
+
+	s.audio = track
+	go s.audio.play(s.audioCh)
 }
 
 func (s *score) init() {

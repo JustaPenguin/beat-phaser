@@ -153,6 +153,9 @@ func (l *laser) HandleCollision(x Collidable, collisionTime float64, normal pixe
 	switch x.(type) {
 	case *laser, *character:
 		return
+	case *outsideDoor:
+		l.destroy()
+		return
 	case *enemy:
 		//@TODO create "hit" splash
 		l.splash = true

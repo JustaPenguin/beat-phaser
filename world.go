@@ -136,6 +136,9 @@ func (w *world) init() {
 	for _, light := range w.lights {
 		light.init()
 	}
+
+	od := outsideDoor{}
+	od.init()
 }
 
 func randomPointInRect(r pixel.Rect) pixel.Vec {

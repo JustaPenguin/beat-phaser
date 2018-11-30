@@ -63,6 +63,7 @@ func (c *character) Rect() pixel.Rect {
 
 func (c *character) die() {
 	ded = true
+	playerScore.changeTrack(nightOnTheDocksAudio)
 }
 
 func (c *character) init() {
