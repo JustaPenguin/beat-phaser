@@ -20,6 +20,7 @@ type world struct {
 
 	rain  *rain
 	rooms []*room
+	lights []*colorLight
 
 	weather   *imdraw.IMDraw
 	mainScene *imdraw.IMDraw
@@ -114,6 +115,27 @@ func (w *world) init() {
 	}
 
 	w.rain.init()
+
+	w.lights = []*colorLight {
+		{
+			color:  colornames.Yellow,
+			point:  pixel.V(-667, 695),
+			angle:  -math.Pi / 2,
+			radius: 50,
+			spread: math.Pi / math.E,
+		},
+		{
+			color:  colornames.Yellow,
+			point:  pixel.V(-552, 695),
+			angle:  -math.Pi / 2,
+			radius: 50,
+			spread: math.Pi / math.E,
+		},
+	}
+
+	for _, light := range w.lights {
+		light.init()
+	}
 }
 
 func randomPointInRect(r pixel.Rect) pixel.Vec {
@@ -151,6 +173,11 @@ func (w *world) draw(t pixel.Target) {
 	w.character.draw(t)
 	w.enemies.draw(t)
 
+
+	for _, light := range w.lights {
+		light.draw(t)
+	}
+
 	for _, room := range w.rooms {
 		if room.topLayer && !room.animLayer {
 			room.drawnRoom.Draw(t)
@@ -162,6 +189,7 @@ func (w *world) draw(t pixel.Target) {
 	w.rain.draw(w.weather)
 
 	w.weather.Draw(t)
+
 	w.mainScene.Draw(t)
 	w.advert.draw(t)
 

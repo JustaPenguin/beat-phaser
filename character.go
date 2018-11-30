@@ -8,6 +8,8 @@ import (
 	"github.com/faiface/pixel/imdraw"
 )
 
+var characterIsOutside = false
+
 type character struct {
 	body   *body
 	weapon *weapon
@@ -85,11 +87,7 @@ func (c *character) update(dt float64) {
 	c.body.update(dt)
 	c.weapon.update(dt, c.body.shootPos, c.body.vel)
 
-	if c.body.rect.Norm().Intersect(streetBoundingRect.Norm()).Area() > 0 {
-		//	fmt.Println("OUTSIDE YO")
-	} else {
-		//	fmt.Println("INSIDE YO")
-	}
+	characterIsOutside = c.body.rect.Norm().Intersect(streetBoundingRect.Norm()).Area() > 0
 }
 
 func (c *character) draw(t pixel.Target) {
