@@ -126,7 +126,7 @@ func (w *world) init() {
 		},
 		{
 			color:  colornames.Yellow,
-			point:  pixel.V(-552, 695),
+			point:  pixel.V(-553, 695),
 			angle:  -math.Pi / 2,
 			radius: 50,
 			spread: math.Pi / math.E,
