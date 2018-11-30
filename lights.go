@@ -28,7 +28,6 @@ func (cl *colorLight) init() {
 
 func (cl *colorLight) draw(dst pixel.Target) {
 
-
 	cl.imd.Clear()
 
 	if playerScore.timeWindow {

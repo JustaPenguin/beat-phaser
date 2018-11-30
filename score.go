@@ -131,28 +131,33 @@ func (s *score) update() {
 
 		if s.timeWindow {
 			s.onBeat = true
-			s.increment++
 
-			if s.increment >= 8 {
-				s.multiplier++
-				s.increment = 0
+			if characterIsOutside {
+				s.increment++
+
+				if s.increment >= 8 {
+					s.multiplier++
+					s.increment = 0
+				}
+
+				if s.multiplier > 8 {
+					s.multiplier = 8
+				}
 			}
-
-			if s.multiplier > 8 {
-				s.multiplier = 8
-			}
-
 		} else {
 			s.onBeat = false
-			s.increment = s.increment - 2
 
-			if s.increment <= 0 {
-				s.multiplier--
-				s.increment = 8
-			}
+			if characterIsOutside {
+				s.increment = s.increment - 2
 
-			if s.multiplier < 1 {
-				s.multiplier = 1
+				if s.increment <= 0 {
+					s.multiplier--
+					s.increment = 8
+				}
+
+				if s.multiplier < 1 {
+					s.multiplier = 1
+				}
 			}
 		}
 	}

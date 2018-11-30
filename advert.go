@@ -17,7 +17,6 @@ var advertMessages = []string{
 	"Boogie",
 	"Y'know so much of the music we hear today is pre-programmed electronic disco, we never get a chance to hear master blues men practicing their craft anymore.",
 	"By the year 2006, the music known today as the blues will exist only in the classical records department of your local public library.",
-
 }
 
 type advert struct {
