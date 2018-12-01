@@ -11,7 +11,7 @@ import (
 
 const (
 	spawnEnemies       = true
-	maxNumberOfEnemies = 40
+	maxNumberOfEnemies = 60
 )
 
 var (

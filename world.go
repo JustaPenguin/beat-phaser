@@ -16,6 +16,7 @@ type world struct {
 	character   *character
 	enemies     *enemiesCollection
 	advert      *advert
+	advert1     *advert
 	deadMessage *deadMessage
 
 	rain         *rain
@@ -66,7 +67,12 @@ func (w *world) init() {
 		pos:      pixel.V(-440, 155),
 		maxWidth: 45,
 	}
+	w.advert1 = &advert{
+		pos: pixel.V(1240, -490),
+		maxWidth: 45,
+	}
 	w.advert.init()
+	w.advert1.init()
 
 	w.deadMessage = &deadMessage{
 		pos: w.character.body.rect.Center().Add(pixel.V(-52, 50)),
@@ -235,6 +241,7 @@ func (w *world) update(dt float64) {
 	w.character.update(dt)
 	w.enemies.update(dt, w.character.body.rect.Center())
 	w.advert.update(dt)
+	w.advert1.update(dt)
 	w.deadMessage.update(dt, w.character.body.rect.Center().Add(pixel.V(-52, 50)))
 
 	for _, room := range w.rooms {
@@ -281,6 +288,7 @@ func (w *world) draw(t pixel.Target) {
 
 	w.mainScene.Draw(t)
 	w.advert.draw(t)
+	w.advert1.draw(t)
 
 	if ded {
 		healthDisplay -= 0.01
