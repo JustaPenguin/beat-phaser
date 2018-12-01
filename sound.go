@@ -111,7 +111,7 @@ func (a *audio) load() error {
 	return nil
 }
 
-func (a *audio) play(ch chan time.Time) {
+func (a *audio) play(ch chan struct{}) {
 	err := speaker.Init(a.format.SampleRate, a.format.SampleRate.N(time.Second/10))
 
 	if err != nil {
@@ -133,11 +133,13 @@ loop:
 		Silent:   false,
 	}
 
+	go func() {
+		ch <- struct{}{}
+	}()
+
 	speaker.Play(beep.Seq(&songVolume, beep.Callback(func() {
 		close(playing)
 	})))
-
-	ch <- time.Now()
 
 	for {
 		select {

@@ -92,11 +92,11 @@ func (c *character) update(dt float64) {
 	c.weapon.update(dt, c.body.shootPos, c.body.vel)
 
 	characterIsOutside = c.body.rect.Norm().Intersect(streetBoundingRect.Norm()).Area() > 0
-/*
-	r := c.body.rect.Norm()
+	/*
+		r := c.body.rect.Norm()
 
-	fmt.Printf("min: %s, max: %s\n", r.Min, r.Max)
-*/
+		fmt.Printf("min: %s, max: %s\n", r.Min, r.Max)
+	*/
 }
 
 func (c *character) draw(t pixel.Target) {

@@ -22,7 +22,6 @@ var advertMessages = []string{
 	"Hello World!",
 	"Ship it!",
 	"<3 <3 <3",
-
 }
 
 type advert struct {

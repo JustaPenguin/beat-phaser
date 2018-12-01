@@ -22,7 +22,7 @@ type score struct {
 	timeWindow, onBeat bool
 
 	audio   *audio
-	audioCh chan time.Time
+	audioCh chan struct{}
 
 	atlas *text.Atlas
 
@@ -95,7 +95,7 @@ func (s *score) init() {
 	}
 
 	s.audio = track
-	s.audioCh = make(chan time.Time)
+	s.audioCh = make(chan struct{})
 
 	s.multiplierPos = pixel.V(20, 20)
 	s.scorePos = pixel.V(0, 20)
@@ -108,8 +108,9 @@ func (s *score) init() {
 	go func() {
 		for {
 			select {
-			case t := <-s.audioCh:
-				s.startTime = t.Add(time.Nanosecond * 27000000)
+			case <-s.audioCh:
+				//s.startTime = t.Add(time.Nanosecond * 27000000)
+				s.startTime = time.Now()
 			}
 		}
 	}()

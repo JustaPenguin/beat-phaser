@@ -18,9 +18,9 @@ type world struct {
 	advert      *advert
 	deadMessage *deadMessage
 
-	rain   *rain
-	rooms  []*room
-	lights []*colorLight
+	rain         *rain
+	rooms        []*room
+	lights       []*colorLight
 	streetLights []*colorLight
 
 	weather   *imdraw.IMDraw
@@ -32,10 +32,9 @@ var healthDisplay float64
 var wallMidpointPositionVec = pixel.V(0, -50)
 var streetBoundingRect = pixel.R(-2100, -200, 2100, -2100)
 
-
 var streetCollidables = []*wall{
-	{rect: pixel.R(595, -750, 695, -700)}, // boxes
-	{rect: pixel.R(400, -885, 440, -900)}, // right lamp
+	{rect: pixel.R(595, -750, 695, -700)},   // boxes
+	{rect: pixel.R(400, -885, 440, -900)},   // right lamp
 	{rect: pixel.R(-480, -885, -445, -900)}, // left lamp
 
 	{rect: pixel.R(160, -1690, 580, -1700)}, // car. brum brum
