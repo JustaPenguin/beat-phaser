@@ -10,7 +10,7 @@ import (
 
 // handgun is a simple handgun-like weapon
 var handgun = &weapon{
-	speed: 500,
+	speed: 700,
 }
 
 type weapon struct {

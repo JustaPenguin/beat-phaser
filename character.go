@@ -42,6 +42,13 @@ func (c *character) HandleCollision(x Collidable, collisionTime float64, normal 
 
 			if playerScore.multiplier > 1 {
 				playerScore.setMultiplier(playerScore.multiplier - 1)
+				c.body.health -= 5
+
+				playerScore.incrementScore(-20.0)
+
+				if c.body.health <= 0 {
+					c.die()
+				}
 			} else {
 				c.body.health -= 20
 

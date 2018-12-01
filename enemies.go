@@ -54,7 +54,7 @@ tryAgain:
 func (e *enemiesCollection) newEnemy() *enemy {
 	return &enemy{
 		spawnPos:  e.spawnPosition(),
-		moveSpeed: 2,
+		moveSpeed: 2.2,
 		health:    e.difficulty,
 		maxHealth: e.difficulty,
 

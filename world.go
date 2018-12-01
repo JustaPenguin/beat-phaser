@@ -322,6 +322,7 @@ func (w *world) draw(t pixel.Target) {
 }
 
 func (w *world) destroy() {
+	deregisterCollidable(w.character)
 	w.enemies.destroy()
 }
 
