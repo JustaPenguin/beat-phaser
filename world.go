@@ -21,6 +21,7 @@ type world struct {
 	rain   *rain
 	rooms  []*room
 	lights []*colorLight
+	streetLights []*colorLight
 
 	weather   *imdraw.IMDraw
 	mainScene *imdraw.IMDraw
@@ -30,6 +31,20 @@ var ded bool
 var healthDisplay float64
 var wallMidpointPositionVec = pixel.V(0, -50)
 var streetBoundingRect = pixel.R(-2100, -200, 2100, -2100)
+
+
+var streetCollidables = []*wall{
+	{rect: pixel.R(595, -750, 695, -700)}, // boxes
+	{rect: pixel.R(400, -885, 440, -900)}, // right lamp
+	{rect: pixel.R(-480, -885, -445, -900)}, // left lamp
+
+	{rect: pixel.R(160, -1690, 580, -1700)}, // car. brum brum
+
+	{rect: pixel.R(-235, -1030, 275, -900)},
+	{rect: pixel.R(50, -1030, 340, -1100)},
+	{rect: pixel.R(-180, -900, 250, -830)},
+	{rect: pixel.R(-140, -830, 70, -755)},
+}
 
 func (w *world) init() {
 	w.character = &character{}
@@ -92,7 +107,10 @@ func (w *world) init() {
 
 	// Wall layers
 	w.rooms = append(w.rooms, &room{path: "/wall-layer-background-bottom", offset: pixel.V(-1400, 0)})
-	w.rooms = append(w.rooms, &room{path: "/wall-layer-background-top", offset: pixel.V(-1400, 0), topLayer: true})
+	w.rooms = append(w.rooms, &room{path: "/wall-layer-background-top", offset: pixel.V(-1400, 0), topLayer: true, walls: []*wall{
+		{rect: pixel.R(-68, -140, 395, -200)}, // table with mirror
+		{rect: pixel.R(-430, 150, -135, 98)},  // table at bottom of bedrooms
+	}})
 
 	// Street layers
 	w.rooms = append(w.rooms, &room{path: "/street-layer-background-bottom", offset: pixel.V(0, -1400), walls: []*wall{
@@ -102,8 +120,9 @@ func (w *world) init() {
 		{rect: pixel.R(streetBoundingRect.Min.X, streetBoundingRect.Max.Y, streetBoundingRect.Max.X, streetBoundingRect.Max.Y-10)}, // bottom
 		{rect: pixel.R(streetBoundingRect.Min.X, streetBoundingRect.Max.Y, streetBoundingRect.Min.X-10, streetBoundingRect.Min.Y)}, // left
 		{rect: pixel.R(streetBoundingRect.Max.X, streetBoundingRect.Max.Y, streetBoundingRect.Max.X+10, streetBoundingRect.Min.Y)}, // right
+
 	}})
-	w.rooms = append(w.rooms, &room{path: "/street-layer-background-top", offset: pixel.V(0, -1400), topLayer: true})
+	w.rooms = append(w.rooms, &room{path: "/street-layer-background-top", offset: pixel.V(0, -1400), topLayer: true, walls: streetCollidables})
 	w.rooms = append(w.rooms, &room{path: "/street-base", offset: pixel.V(1400, -1400)})
 	w.rooms = append(w.rooms, &room{path: "/street-base", offset: pixel.V(-1400, -1400)})
 
@@ -117,16 +136,18 @@ func (w *world) init() {
 
 	w.rain.init()
 
+	colorYellow := color.RGBA{232, 235, 35, 255}
+
 	w.lights = []*colorLight{
 		{
-			color:  colornames.Yellow,
+			color:  colorYellow,
 			point:  pixel.V(-667, 695),
 			angle:  -math.Pi / 2,
 			radius: 50,
 			spread: math.Pi / math.E,
 		},
 		{
-			color:  colornames.Yellow,
+			color:  colorYellow,
 			point:  pixel.V(-553, 695),
 			angle:  -math.Pi / 2,
 			radius: 50,
@@ -134,7 +155,29 @@ func (w *world) init() {
 		},
 	}
 
+	w.streetLights = []*colorLight{
+		// street lights
+		{
+			color:  colorYellow,
+			point:  pixel.V(-458, -708),
+			angle:  -math.Pi / 2,
+			radius: 400,
+			spread: math.Pi / math.E,
+		},
+		{
+			color:  colorYellow,
+			point:  pixel.V(419, -708),
+			angle:  -math.Pi / 2,
+			radius: 400,
+			spread: math.Pi / math.E,
+		},
+	}
+
 	for _, light := range w.lights {
+		light.init()
+	}
+
+	for _, light := range w.streetLights {
 		light.init()
 	}
 
@@ -185,6 +228,10 @@ func (w *world) draw(t pixel.Target) {
 		if room.topLayer && !room.animLayer {
 			room.drawnRoom.Draw(t)
 		}
+	}
+
+	for _, light := range w.streetLights {
+		light.draw(t)
 	}
 
 	//w.ui.draw
