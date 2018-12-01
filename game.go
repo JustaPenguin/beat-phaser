@@ -40,6 +40,7 @@ func (g *game) init() error {
 
 	// camera
 	camPos = playerSpawnPos
+	healthDisplay = 1
 
 	return nil
 }

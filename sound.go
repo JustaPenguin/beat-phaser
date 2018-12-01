@@ -18,6 +18,7 @@ var (
 		filepath: filepath.Join("audio", "tracks", "Kevin_MacLeod_-_AcidJazz.mp3"),
 		loop:     -1,
 		bpm:      110.724,
+		buffered: true,
 	}
 
 	backedVibesAudio = &audio{
@@ -80,8 +81,10 @@ type audio struct {
 	filepath string
 	loop     int
 	bpm      float64
+	buffered bool
 
-	streamer beep.StreamSeekCloser
+	buf      *beep.Buffer
+	streamer beep.StreamSeeker
 	format   beep.Format
 	file     *os.File
 
@@ -103,8 +106,17 @@ func (a *audio) load() error {
 		return err
 	}
 
-	a.streamer = s1
-	a.format = format
+	if a.buffered {
+		buf := beep.NewBuffer(format)
+		buf.Append(s1)
+
+		a.buf = buf
+		a.streamer = a.buf.Streamer(0, a.buf.Len())
+		a.format = a.buf.Format()
+	} else {
+		a.streamer = s1
+		a.format = format
+	}
 
 	a.ctx, a.cfn = context.WithCancel(context.Background())
 
@@ -126,20 +138,19 @@ loop:
 		panic(err)
 	}
 
-	songVolume := effects.Volume{
-		Streamer: a.streamer,
+	ctrl := &effects.Volume{
+		Streamer: beep.Loop(-1, a.streamer),
 		Base:     2,
 		Volume:   -3,
 		Silent:   false,
 	}
 
+	speaker.Play(beep.Seq(ctrl, beep.Callback(func() {
+		close(playing)
+	})))
 	go func() {
 		ch <- struct{}{}
 	}()
-
-	speaker.Play(beep.Seq(&songVolume, beep.Callback(func() {
-		close(playing)
-	})))
 
 	for {
 		select {
@@ -156,11 +167,6 @@ loop:
 }
 
 func (a *audio) close() error {
-	err := a.streamer.Close()
-
-	if err != nil {
-		return err
-	}
 
 	return a.file.Close()
 }
