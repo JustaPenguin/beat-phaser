@@ -10,6 +10,7 @@ import (
 )
 
 const (
+	spawnEnemies       = true
 	maxNumberOfEnemies = 40
 )
 
@@ -97,7 +98,7 @@ func (e *enemiesCollection) update(dt float64, targetPos pixel.Vec) {
 
 	// e.step seconds have passed, add a new enemy (and increase spawn rate)
 	// max enemies 50 (could be more but hey)
-	if len(e.enemies) <= maxNumberOfEnemies {
+	if len(e.enemies) <= maxNumberOfEnemies && spawnEnemies {
 		if e.counter > e.step && characterIsOutside {
 			enemy := e.newEnemy()
 

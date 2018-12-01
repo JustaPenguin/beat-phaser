@@ -33,16 +33,25 @@ var wallMidpointPositionVec = pixel.V(0, -50)
 var streetBoundingRect = pixel.R(-2100, -200, 2100, -2100)
 
 var streetCollidables = []*wall{
-	{rect: pixel.R(595, -750, 695, -700)},   // boxes
-	{rect: pixel.R(400, -885, 440, -900)},   // right lamp
-	{rect: pixel.R(-480, -885, -445, -900)}, // left lamp
+	{rect: pixel.R(595, -750, 695, -400)},      // boxes
+	{rect: pixel.R(1975, -1970, 2100, -2100)},  // ..
+	{rect: pixel.R(-1025, -1880, -810, -1920)}, // ..
+	{rect: pixel.R(-1930, -750, -1805, -555)},  // end boxes
 
-	{rect: pixel.R(160, -1690, 580, -1700)}, // car. brum brum
+	{rect: pixel.R(400, -885, 440, -900)},     // lamps
+	{rect: pixel.R(-480, -885, -445, -900)},   // ..
+	{rect: pixel.R(-1080, -885, -1035, -900)}, // ..
+	{rect: pixel.R(-1810, -885, -1765, -900)}, // ..
+	{rect: pixel.R(945, -885, 1000, -900)},    // ..
+	{rect: pixel.R(1815, -885, 1850, -900)},   // end lamps
 
-	{rect: pixel.R(-235, -1030, 275, -900)},
-	{rect: pixel.R(50, -1030, 340, -1100)},
-	{rect: pixel.R(-180, -900, 250, -830)},
-	{rect: pixel.R(-140, -830, 70, -755)},
+	{rect: pixel.R(160, -1690, 580, -1700)},     // car. brum brum
+	{rect: pixel.R(-2000, -1690, -1560, -1700)}, // blue car. brum brum
+
+	{rect: pixel.R(-235, -1030, 275, -900)}, // sign parts
+	{rect: pixel.R(50, -1030, 340, -1100)},  // ..
+	{rect: pixel.R(-180, -900, 250, -830)},  // ..
+	{rect: pixel.R(-140, -830, 70, -755)},   // end sign parts
 }
 
 func (w *world) init() {
@@ -119,7 +128,6 @@ func (w *world) init() {
 		{rect: pixel.R(streetBoundingRect.Min.X, streetBoundingRect.Max.Y, streetBoundingRect.Max.X, streetBoundingRect.Max.Y-10)}, // bottom
 		{rect: pixel.R(streetBoundingRect.Min.X, streetBoundingRect.Max.Y, streetBoundingRect.Min.X-10, streetBoundingRect.Min.Y)}, // left
 		{rect: pixel.R(streetBoundingRect.Max.X, streetBoundingRect.Max.Y, streetBoundingRect.Max.X+10, streetBoundingRect.Min.Y)}, // right
-
 	}})
 	w.rooms = append(w.rooms, &room{path: "/street-layer-background-top", offset: pixel.V(0, -1400), topLayer: true, walls: streetCollidables})
 
@@ -170,6 +178,34 @@ func (w *world) init() {
 		{
 			color:  colorYellow,
 			point:  pixel.V(419, -708),
+			angle:  -math.Pi / 2,
+			radius: 400,
+			spread: math.Pi / math.E,
+		},
+		{
+			color:  colorYellow,
+			point:  pixel.V(969, -708),
+			angle:  -math.Pi / 2,
+			radius: 400,
+			spread: math.Pi / math.E,
+		},
+		{
+			color:  colorYellow,
+			point:  pixel.V(1835, -708),
+			angle:  -math.Pi / 2,
+			radius: 400,
+			spread: math.Pi / math.E,
+		},
+		{
+			color:  colorYellow,
+			point:  pixel.V(-1058, -708),
+			angle:  -math.Pi / 2,
+			radius: 400,
+			spread: math.Pi / math.E,
+		},
+		{
+			color:  colorYellow,
+			point:  pixel.V(-1784, -708),
 			angle:  -math.Pi / 2,
 			radius: 400,
 			spread: math.Pi / math.E,
