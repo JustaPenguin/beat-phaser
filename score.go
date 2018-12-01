@@ -119,9 +119,9 @@ func (s *score) init() {
 	go s.audio.play(s.audioCh)
 }
 
-func (s *score) update() {
+func (s *score) update(dt float64) {
 	// If time is within 10ms of the bpm (from start time)
-	timeSince := (time.Now().UnixNano() - s.startTime.UnixNano()) % (int64(60000000000 / s.audio.bpm))
+	timeSince := (time.Now().UnixNano() - s.startTime.UnixNano() - int64(dt * 1e+9)) % (int64(60000000000 / s.audio.bpm))
 	if timeSince <= 100000000 || timeSince >= 400000000 {
 		s.timeWindow = true
 	} else {

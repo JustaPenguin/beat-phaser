@@ -46,8 +46,7 @@ func (g *game) init() error {
 
 func (g *game) update(dt float64) {
 	g.world.update(dt)
-
-	playerScore.update()
+	playerScore.update(dt)
 }
 
 var drawCollisionBoxes = false
