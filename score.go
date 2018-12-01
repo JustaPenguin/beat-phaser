@@ -78,24 +78,12 @@ func (s *score) changeTrack(track *audio) {
 	s.audio.cfn()
 
 	s.audio = track
-	go s.audio.play(s.audioCh)
+	s.audio.play(s.audioCh)
 }
 
 func (s *score) init() {
 
 	s.multiplier = 1
-
-	// change audio track here
-	track := acidJazzAudio
-
-	err := track.load()
-
-	if err != nil {
-		panic(err)
-	}
-
-	s.audio = track
-	s.audioCh = make(chan struct{})
 
 	s.multiplierPos = pixel.V(20, 20)
 	s.scorePos = pixel.V(0, 20)
@@ -105,17 +93,31 @@ func (s *score) init() {
 		[]rune{'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'x', '-'},
 	)
 
+	s.audioCh = make(chan struct{})
+
+	go func() {
+
+		// change audio track here
+		s.audio = acidJazzAudio
+
+		err := s.audio.load()
+
+		if err != nil {
+			panic(err)
+		}
+
+		// start the current track
+		go s.audio.play(s.audioCh)
+	}()
+
 	go func() {
 		select {
 		case <-s.audioCh:
 			//s.startTime = t
-			s.startTime = time.Now().Add(time.Nanosecond * 27000000)
+			s.startTime = time.Now().Add(time.Nanosecond * 28000000)
 			return
 		}
 	}()
-
-	// start the current track
-	go s.audio.play(s.audioCh)
 }
 
 func (s *score) update(dt float64) {

@@ -68,7 +68,7 @@ func (w *world) init() {
 		maxWidth: 45,
 	}
 	w.advert1 = &advert{
-		pos: pixel.V(1240, -490),
+		pos:      pixel.V(1240, -490),
 		maxWidth: 45,
 	}
 	w.advert.init()
