@@ -106,12 +106,11 @@ func (s *score) init() {
 	)
 
 	go func() {
-		for {
-			select {
-			case <-s.audioCh:
-				//s.startTime = t.Add(time.Nanosecond * 27000000)
-				s.startTime = time.Now()
-			}
+		select {
+		case <-s.audioCh:
+			//s.startTime = t
+			s.startTime = time.Now().Add(time.Nanosecond * 27000000)
+			return
 		}
 	}()
 
