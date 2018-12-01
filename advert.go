@@ -19,6 +19,10 @@ var advertMessages = []string{
 	"By the year 2006, the music known today as the blues will exist only in the classical records department of your local public library.",
 	"You're gonna carry that weight.",
 	"Eat, Sleep, Buy Stuff, Dance.",
+	"Hello World!",
+	"Ship it!",
+	"<3 <3 <3",
+
 }
 
 type advert struct {

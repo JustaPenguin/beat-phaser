@@ -123,8 +123,12 @@ func (w *world) init() {
 
 	}})
 	w.rooms = append(w.rooms, &room{path: "/street-layer-background-top", offset: pixel.V(0, -1400), topLayer: true, walls: streetCollidables})
-	w.rooms = append(w.rooms, &room{path: "/street-base", offset: pixel.V(1400, -1400)})
-	w.rooms = append(w.rooms, &room{path: "/street-base", offset: pixel.V(-1400, -1400)})
+
+	w.rooms = append(w.rooms, &room{path: "/street-right-layer-background-bottom", offset: pixel.V(1400, -1400)})
+	w.rooms = append(w.rooms, &room{path: "/street-right-layer-background-top", offset: pixel.V(1400, -1400), topLayer: true})
+
+	w.rooms = append(w.rooms, &room{path: "/street-left-layer-background-bottom", offset: pixel.V(-1400, -1400)})
+	w.rooms = append(w.rooms, &room{path: "/street-left-layer-background-top", offset: pixel.V(-1400, -1400), topLayer: true})
 
 	for _, room := range w.rooms {
 		room.init(room.path)
